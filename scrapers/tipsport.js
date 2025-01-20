@@ -2,30 +2,24 @@
 
 import fs from 'fs'
 
-const CUSTOM_UA =
-	'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36'
-const TRACKED_SPORTS = ['tenis', 'basketbal']
+const BASE_DATA_FILE_PATH = process.cwd() + '/data/tipsport'
 const MENU_ELEMENTS_SELECTOR = '[class^="Menustyled__FirstLvlTitle"]'
 const MATCH_ROW_SELECTOR = '[class^="Matchstyled__Row"]'
 const BETS_SELECTOR =
 	'[class^="Matchstyled__Wrapper"] div[data-my-selection-id]'
 
 export const scrapeTipsport = async (browser) => {
+	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
+
 	const page = await browser.newPage()
 
-	await page.setUserAgent(CUSTOM_UA)
+	await page.setUserAgent(process.env.CUSTOM_UA)
 
 	await page.goto('https://www.tipsport.sk/', {
 		waitUntil: 'networkidle2',
 	})
 
-	await page.waitForFunction(
-		(selector) => {
-			return Array.from(document.querySelectorAll(selector)).length > 0
-		},
-		undefined,
-		MENU_ELEMENTS_SELECTOR
-	)
+	await page.waitForSelector(MENU_ELEMENTS_SELECTOR)
 
 	const menuNames = await page.$$eval(MENU_ELEMENTS_SELECTOR, (nodes) => {
 		return nodes.map((node) => node.textContent?.toLowerCase() || '')
@@ -42,7 +36,7 @@ export const scrapeTipsport = async (browser) => {
 				)
 				.filter((index) => index !== -1)
 		},
-		TRACKED_SPORTS
+		process.env.TRACKED_SPORTS?.split(',')
 	)
 
 	for (const index of menuIndexes) {
@@ -156,11 +150,12 @@ export const scrapeTipsport = async (browser) => {
 				name: matchName,
 				url: matchUrl,
 				bets: betsGroups,
+				timestamp: Date.now(),
 			})
 		}
 
 		await fs.writeFile(
-			process.cwd() + `/data/tipsport/${sportName}.json`,
+			`${BASE_DATA_FILE_PATH}/${sportName}.json`,
 			JSON.stringify(matchesData),
 			() => {}
 		)

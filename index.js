@@ -1,11 +1,18 @@
+import 'dotenv/config'
 import puppeteer from 'puppeteer'
 import { scrapeTipsport } from './scrapers/tipsport.js'
 
 const init = async () => {
-	const browser = await puppeteer.launch()
+	const browser = await puppeteer.launch({
+		devtools: false,
+		headless: true,
+		args: [
+			'--window-size=1920,1080',
+			'--disable-blink-features=AutomationControlled',
+		],
+	})
 
 	await Promise.all([scrapeTipsport(browser)])
-
 	await browser.close()
 }
 
