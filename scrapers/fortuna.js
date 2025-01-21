@@ -1,9 +1,27 @@
 // TODO hlavne stavky
 
+import { DateTime } from 'luxon'
 import fs from 'fs'
 
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/fortuna'
 const MENU_ELEMENTS_SELECTOR = '.sport-tree:nth-child(1) .btn-sport'
+
+const getTsFromRawDate = (rawDate) => {
+	let date
+
+	try {
+		date = DateTime.fromFormat(rawDate, 'dd.MM. HH:mm', {
+			zone: 'Europe/Bratislava',
+		})
+	} catch {
+	} finally {
+		date = DateTime.fromFormat(rawDate, 'd.M. HH:mm', {
+			zone: 'Europe/Bratislava',
+		})
+	}
+
+	return date.toMillis()
+}
 
 export const scrapeFortuna = async (browser) => {
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
@@ -102,27 +120,7 @@ export const scrapeFortuna = async (browser) => {
 
 		await page.waitForNetworkIdle()
 
-		const matchesData = await page.evaluate(() => {
-			const getTimestampFromString = (input) => {
-				if (!input?.length) {
-					return null
-				}
-
-				const day = input.split('.')[0]
-				const month = input.split('.')[1].split(' ')[0]
-				const time = input.split(' ')[1]
-				const [hours, minutes] = time.split(':')
-				const now = new Date()
-				const year = now.getFullYear()
-
-				const date = new Date(
-					Date.UTC(year, month - 1, day, hours, minutes)
-				)
-				date.setMinutes(date.getMinutes() - date.getTimezoneOffset())
-
-				return date.getTime()
-			}
-
+		let matchesData = await page.evaluate(() => {
 			const data = []
 			let matchId = 1
 
@@ -142,11 +140,10 @@ export const scrapeFortuna = async (browser) => {
 								const url =
 									'https://www.ifortuna.sk' +
 									nameEl?.getAttribute('href')
-								const startsAtTs = getTimestampFromString(
+								const startsAtTs =
 									matchMarketEl
 										.querySelector('span.datetime')
 										?.textContent?.trim() || ''
-								)
 
 								sectionEl
 									.querySelectorAll('div.market')
@@ -219,11 +216,10 @@ export const scrapeFortuna = async (browser) => {
 						const url =
 							'https://www.ifortuna.sk' +
 								nameEl?.parentElement?.getAttribute('href') || ''
-						const startsAtTs = getTimestampFromString(
+						const startsAtTs =
 							sectionEl
 								.querySelector('span.event-datetime')
 								?.textContent?.trim() || ''
-						)
 
 						const bets = []
 
@@ -301,6 +297,13 @@ export const scrapeFortuna = async (browser) => {
 				})
 
 			return data
+		})
+
+		matchesData = matchesData.map((match) => {
+			return {
+				...match,
+				startsAtTs: getTsFromRawDate(match.startsAtTs),
+			}
 		})
 
 		await fs.writeFile(
