@@ -205,6 +205,7 @@ export const scrapeFortuna = async (browser) => {
 									name,
 									url,
 									startsAtTs,
+									checkedAtTs: Date.now(),
 									bets,
 								})
 
@@ -291,6 +292,7 @@ export const scrapeFortuna = async (browser) => {
 							name,
 							url,
 							startsAtTs,
+							checkedAtTs: Date.now(),
 							bets,
 						})
 

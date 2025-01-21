@@ -1,7 +1,6 @@
-// TODO datum a cas zapasu
-// TODO match ID
 // TODO zamknute stavky
 
+import { DateTime } from 'luxon'
 import fs from 'fs'
 
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/tipsport'
@@ -10,12 +9,22 @@ const MATCH_ROW_SELECTOR = '[class^="Matchstyled__Row"]'
 const BETS_SELECTOR =
 	'[class^="Matchstyled__Wrapper"] div[data-my-selection-id]'
 
+const getTsFromRawDate = (rawDate) => {
+	const date = DateTime.fromFormat(rawDate, 'd. M. yyyy | H:mm', {
+		zone: 'Europe/Bratislava',
+	})
+
+	return date.toMillis()
+}
+
 export const scrapeTipsport = async (browser) => {
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
 
 	const page = await browser.newPage()
 
 	await page.setUserAgent(process.env.CUSTOM_UA)
+
+	await page.emulateTimezone('Europe/Bratislava')
 
 	await page.goto('https://www.tipsport.sk/', {
 		waitUntil: 'networkidle2',
@@ -68,16 +77,70 @@ export const scrapeTipsport = async (browser) => {
 			MATCH_ROW_SELECTOR
 		)
 
-		// TODO scroll ?
+		let previousHeight = 0
+
+		while (true) {
+			const newHeight = await page.evaluate(() => {
+				window.scrollTo(0, document.body.scrollHeight)
+				return document.body.scrollHeight
+			})
+
+			// TODO randomize
+			await new Promise((res) => setTimeout(res, 1000))
+
+			if (newHeight === previousHeight) {
+				break
+			}
+
+			previousHeight = newHeight
+		}
 
 		const matches = await page.$$(MATCH_ROW_SELECTOR)
 
 		const matchNames = await page.$$eval(
 			`${MATCH_ROW_SELECTOR} [class^="Matchstyled__Name"]`,
 			(nameEls) => {
-				return nameEls.map((el) => el.textContent)
+				return nameEls.map((el) => el.textContent?.trim() || '')
 			}
 		)
+
+		const matchDates = await page.$$eval(
+			`${MATCH_ROW_SELECTOR} span:first-child[class^="Matchstyled__Info"]`,
+			(dateEls) => {
+				return dateEls.map((el) => {
+					const textContent = el.textContent?.trim() || null
+
+					if (!textContent) {
+						return null
+					}
+
+					const dateRaw = textContent.split(' | ')[0]
+					const timeString = textContent.split(' | ')[1]
+
+					let formattedDate = dateRaw
+
+					if (dateRaw === 'Dnes' || dateRaw === 'Zajtra') {
+						const currentDate = new Date()
+
+						if (dateRaw === 'Zajtra') {
+							currentDate.setDate(currentDate.getDate() + 1)
+						}
+
+						formattedDate = currentDate.toLocaleDateString('sk-SK', {
+							day: 'numeric',
+							month: 'numeric',
+							year: 'numeric',
+							timeZone: 'Europe/Bratislava',
+						})
+					}
+
+					const dateTimeRaw = `${formattedDate} | ${timeString}`
+					return dateTimeRaw
+				})
+			}
+		)
+
+		let matchId = 1
 
 		for (let i = 0; i < matches.length; i++) {
 			// MATCH ITEM
@@ -94,7 +157,6 @@ export const scrapeTipsport = async (browser) => {
 			)
 
 			const matchName = matchNames[i]
-
 			const matchUrl = await page.evaluate(() => window.location.href)
 
 			try {
@@ -155,11 +217,15 @@ export const scrapeTipsport = async (browser) => {
 			)
 
 			matchesData.push({
+				id: matchId,
 				name: matchName,
 				url: matchUrl,
+				startsAtTs: getTsFromRawDate(matchDates[i]),
+				checkedAtTs: Date.now(),
 				bets: betsGroups,
-				checked_at_ts: Date.now(),
 			})
+
+			matchId++
 		}
 
 		await fs.writeFile(

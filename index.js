@@ -13,7 +13,9 @@ const init = async () => {
 		],
 	})
 
-	await Promise.all([scrapeTipsport(browser)])
+	await scrapeTipsport(browser)
+	await scrapeFortuna(browser)
+
 	await browser.close()
 }
 
