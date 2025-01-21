@@ -132,6 +132,49 @@ export const scrapeFortuna = async (browser) => {
 					)
 
 					if (expandButton) {
+						const mainEventsColNames = Array.from(
+							sectionEl.querySelectorAll(
+								'.events-table-box--main-market thead th.col-odds .odds-name'
+							)
+						).map((col) => col.textContent?.trim() || '')
+
+						const mainEvents = Array.from(
+							sectionEl.querySelectorAll(
+								'.events-table-box--main-market .tablesorter-hasChildRow'
+							)
+						)?.map((mainEventsRow) => {
+							const mainEventName =
+								mainEventsRow
+									.querySelector('td.col-title span.market-name')
+									?.textContent?.trim() || ''
+
+							return {
+								mainEventName,
+								data: {
+									name:
+										sectionEl
+											.querySelector('.market-sub-name')
+											?.textContent?.trim() || '',
+									options: Array.from(
+										mainEventsRow.querySelectorAll('td.col-odds')
+									)
+										.map((col, colIndex) => {
+											return {
+												name: mainEventsColNames[colIndex],
+												value: Number(
+													col
+														.querySelector('.odds-value')
+														?.textContent?.trim() || 0
+												),
+											}
+										})
+										.filter((data) => {
+											return data.value >= 1
+										}),
+								},
+							}
+						})
+
 						sectionEl
 							.querySelectorAll('.market-with-header')
 							.forEach((matchMarketEl) => {
@@ -196,6 +239,14 @@ export const scrapeFortuna = async (browser) => {
 										options,
 									}
 								})
+
+								const mainEvent = mainEvents.find(
+									(mainEvent) => mainEvent.mainEventName === name
+								)
+
+								if (mainEvent) {
+									bets.unshift(mainEvent.data)
+								}
 
 								data.push({
 									id: matchId,
