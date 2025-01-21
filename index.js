@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import puppeteer from 'puppeteer'
 import { scrapeTipsport } from './scrapers/tipsport.js'
+import { scrapeFortuna } from './scrapers/fortuna.js'
 
 const init = async () => {
 	const browser = await puppeteer.launch({

@@ -1,3 +1,5 @@
+// TODO datum a cas zapasu
+// TODO match ID
 // TODO zamknute stavky
 
 import fs from 'fs'
@@ -95,13 +97,19 @@ export const scrapeTipsport = async (browser) => {
 
 			const matchUrl = await page.evaluate(() => window.location.href)
 
-			await page.waitForFunction(
-				(selector) => {
-					return Array.from(document.querySelectorAll(selector)).length > 0
-				},
-				undefined,
-				BETS_SELECTOR
-			)
+			try {
+				await page.waitForFunction(
+					(selector) => {
+						return (
+							Array.from(document.querySelectorAll(selector)).length > 0
+						)
+					},
+					undefined,
+					BETS_SELECTOR
+				)
+			} catch {
+				return
+			}
 
 			const betsGroups = await page.$$eval(BETS_SELECTOR, (elements) =>
 				elements.map((groupEl) => {
@@ -150,13 +158,13 @@ export const scrapeTipsport = async (browser) => {
 				name: matchName,
 				url: matchUrl,
 				bets: betsGroups,
-				timestamp: Date.now(),
+				checked_at_ts: Date.now(),
 			})
 		}
 
 		await fs.writeFile(
 			`${BASE_DATA_FILE_PATH}/${sportName}.json`,
-			JSON.stringify(matchesData),
+			JSON.stringify(matchesData, null, 3),
 			() => {}
 		)
 	}
