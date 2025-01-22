@@ -1,4 +1,4 @@
-// TODO hlavne stavky
+// TODO chyba kedy sa do prvych troch zapasov dostali rovnake prilezitosti z prveho zapasu
 
 import { DateTime } from 'luxon'
 import fs from 'fs'
@@ -7,6 +7,11 @@ const BASE_DATA_FILE_PATH = process.cwd() + '/data/fortuna'
 const MENU_ELEMENTS_SELECTOR = '.sport-tree:nth-child(1) .btn-sport'
 
 const getTsFromRawDate = (rawDate) => {
+	if (!rawDate?.length) {
+		console.error('fortuna scraper - getTsFromRawDate rawDate param missing')
+		return Date.now()
+	}
+
 	let date
 
 	try {
@@ -24,6 +29,9 @@ const getTsFromRawDate = (rawDate) => {
 }
 
 export const scrapeFortuna = async (browser) => {
+	const start = performance.now()
+	console.log('scraping fortuna...')
+
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
 
 	const page = await browser.newPage()
@@ -363,4 +371,10 @@ export const scrapeFortuna = async (browser) => {
 			() => {}
 		)
 	}
+
+	console.log(
+		`...fortuna scraped in ${Math.round(
+			(performance.now() - start) / 1000
+		)} seconds`
+	)
 }

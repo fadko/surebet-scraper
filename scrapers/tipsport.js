@@ -10,6 +10,11 @@ const BETS_SELECTOR =
 	'[class^="Matchstyled__Wrapper"] div[data-my-selection-id]'
 
 const getTsFromRawDate = (rawDate) => {
+	if (!rawDate?.length) {
+		console.error('tipsport scraper - getTsFromRawDate rawDate param missing')
+		return Date.now()
+	}
+
 	const date = DateTime.fromFormat(rawDate, 'd. M. yyyy | H:mm', {
 		zone: 'Europe/Bratislava',
 	})
@@ -18,6 +23,9 @@ const getTsFromRawDate = (rawDate) => {
 }
 
 export const scrapeTipsport = async (browser) => {
+	const start = performance.now()
+	console.log('scraping tipsport...')
+
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
 
 	const page = await browser.newPage()
@@ -105,10 +113,15 @@ export const scrapeTipsport = async (browser) => {
 		)
 
 		const matchDates = await page.$$eval(
-			`${MATCH_ROW_SELECTOR} span:first-child[class^="Matchstyled__Info"]`,
-			(dateEls) => {
-				return dateEls.map((el) => {
-					const textContent = el.textContent?.trim() || null
+			`${MATCH_ROW_SELECTOR} `,
+			(rowEls) => {
+				return rowEls.map((el) => {
+					const textContent =
+						el
+							.querySelector(
+								'span:first-child[class^="Matchstyled__Info"]'
+							)
+							?.textContent?.trim() || null
 
 					if (!textContent) {
 						return null
@@ -234,4 +247,10 @@ export const scrapeTipsport = async (browser) => {
 			() => {}
 		)
 	}
+
+	console.log(
+		`...tipsport scraped in ${Math.round(
+			(performance.now() - start) / 1000
+		)} seconds`
+	)
 }
