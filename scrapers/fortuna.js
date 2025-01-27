@@ -1,5 +1,3 @@
-// TODO chyba kedy sa do prvych troch zapasov dostali rovnake prilezitosti z prveho zapasu
-
 import { DateTime } from 'luxon'
 import fs from 'fs'
 
@@ -150,7 +148,7 @@ export const scrapeFortuna = async (browser) => {
 							sectionEl.querySelectorAll(
 								'.events-table-box--main-market .tablesorter-hasChildRow'
 							)
-						)?.map((mainEventsRow) => {
+						)?.map((mainEventsRow, mainEventIndex) => {
 							const mainEventName =
 								mainEventsRow
 									.querySelector('td.col-title span.market-name')
@@ -159,6 +157,7 @@ export const scrapeFortuna = async (browser) => {
 							return {
 								mainEventName,
 								data: {
+									id: mainEventIndex + 1,
 									name:
 										sectionEl
 											.querySelector('.market-sub-name')
@@ -196,7 +195,7 @@ export const scrapeFortuna = async (browser) => {
 										.querySelector('span.datetime')
 										?.textContent?.trim() || ''
 
-								sectionEl
+								matchMarketEl
 									.querySelectorAll('div.market')
 									?.forEach((marketEl) => {
 										marketEl
@@ -205,14 +204,14 @@ export const scrapeFortuna = async (browser) => {
 									})
 
 								const bets = Array.from(
-									sectionEl.querySelectorAll('div.market')
-								)?.map((marketEl) => {
-									const nameEl = marketEl.querySelector('h3 a')
+									matchMarketEl.querySelectorAll('div.market')
+								)?.map((marketEl, betsIndex) => {
+									const marketNameEl = marketEl.querySelector('h3 a')
 									//@ts-ignore
-									const name = nameEl?.innerText
+									const name = marketNameEl?.innerText
 										? //@ts-ignore
-										  nameEl?.innerText?.trim() || ''
-										: nameEl?.textContent?.trim() || ''
+										  marketNameEl?.innerText?.trim() || ''
+										: marketNameEl?.textContent?.trim() || ''
 									const options = Array.from(
 										marketEl.querySelectorAll('.odds-group a')
 									)
@@ -243,6 +242,7 @@ export const scrapeFortuna = async (browser) => {
 										})
 
 									return {
+										id: betsIndex + 1 + mainEvents.length,
 										name,
 										options,
 									}
@@ -292,55 +292,58 @@ export const scrapeFortuna = async (browser) => {
 							)
 						})
 
-						sectionEl.querySelectorAll('tbody tr')?.forEach((row) => {
-							const eventNameWrapperEl = row.querySelector(
-								'.title-container .event-name'
-							)
+						sectionEl
+							.querySelectorAll('tbody tr')
+							?.forEach((row, rowIndex) => {
+								const eventNameWrapperEl = row.querySelector(
+									'.title-container .event-name'
+								)
 
-							eventNameWrapperEl
-								?.querySelector('span.event-meta')
-								?.remove()
+								eventNameWrapperEl
+									?.querySelector('span.event-meta')
+									?.remove()
 
-							const betName = eventNameWrapperEl?.querySelector(
-								'span.market-name'
-							)
-								? eventNameWrapperEl
-										?.querySelector('span.market-name')
-										?.textContent?.trim()
-								: eventNameWrapperEl?.textContent?.trim() || ''
-
-							const options = Array.from(
-								row.querySelectorAll('td.col-odds')
-							)
-								.filter((el) => {
-									const numValue = Number(
-										el
-											.querySelector('.odds-value')
+								const betName = eventNameWrapperEl?.querySelector(
+									'span.market-name'
+								)
+									? eventNameWrapperEl
+											?.querySelector('span.market-name')
 											?.textContent?.trim()
-									)
-									const value = numValue > 1 ? numValue : null
+									: eventNameWrapperEl?.textContent?.trim() || ''
 
-									return !!value
+								const options = Array.from(
+									row.querySelectorAll('td.col-odds')
+								)
+									.filter((el) => {
+										const numValue = Number(
+											el
+												.querySelector('.odds-value')
+												?.textContent?.trim()
+										)
+										const value = numValue > 1 ? numValue : null
+
+										return !!value
+									})
+									.map((el, colIndex) => {
+										const numValue = Number(
+											el
+												.querySelector('.odds-value')
+												?.textContent?.trim()
+										)
+										const value = numValue > 1 ? numValue : null
+
+										return {
+											name: colNames[colIndex],
+											value,
+										}
+									})
+
+								bets.push({
+									id: rowIndex + 1,
+									name: betName,
+									options,
 								})
-								.map((el, colIndex) => {
-									const numValue = Number(
-										el
-											.querySelector('.odds-value')
-											?.textContent?.trim()
-									)
-									const value = numValue > 1 ? numValue : null
-
-									return {
-										name: colNames[colIndex],
-										value,
-									}
-								})
-
-							bets.push({
-								name: betName,
-								options,
 							})
-						})
 
 						data.push({
 							id: matchId,

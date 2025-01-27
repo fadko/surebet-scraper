@@ -187,7 +187,7 @@ export const scrapeTipsport = async (browser) => {
 			}
 
 			const betsGroups = await page.$$eval(BETS_SELECTOR, (elements) =>
-				elements.map((groupEl) => {
+				elements.map((groupEl, groupIndex) => {
 					const name = groupEl.querySelector(
 						'[class^="SubHeaderstyled__SubHeader"]'
 					).textContent
@@ -225,7 +225,7 @@ export const scrapeTipsport = async (browser) => {
 						return { name: finalBetName, value }
 					})
 
-					return { name, options }
+					return { id: groupIndex + 1, name, options }
 				})
 			)
 
