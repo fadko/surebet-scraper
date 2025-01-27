@@ -118,10 +118,9 @@ export const findOppositeBetOptions = (sameBets) => {
 		})
 	})
 
-	fs.writeFile(
+	fs.writeFileSync(
 		`${BASE_DATA_FOLDER_PATH}/opposite-bet-options.json`,
-		JSON.stringify(result, null, 3),
-		() => {}
+		JSON.stringify(result, null, 3)
 	)
 
 	console.log(
