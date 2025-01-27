@@ -125,4 +125,6 @@ export const findSameMatches = () => {
 			performance.now() - now
 		)}ms`
 	)
+
+	return foundMatches
 }
