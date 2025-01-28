@@ -21,9 +21,56 @@ const loadSportsData = (sports) => {
 	return result
 }
 
-const formatMatchResultOption = (optionName, matchName) => {
+const formatMatchResultOption = (optionName, matchName, matchName2) => {
+	const bannedTeamWords = process.env.BANNED_TEAM_WORDS?.split(',') || []
+	let hasOppositeTeamOrder = false
+
+	if (matchName2?.length && matchName.includes('USA')) {
+		const matchName1Normalized = matchName
+			.toLowerCase()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.split(' - ')
+			.map((teamNameArr) =>
+				teamNameArr
+					.split(' ')
+					.filter(
+						(word) => word.length > 1 && !bannedTeamWords.includes(word)
+					)
+					.join()
+			)
+		const matchName2Normalized = matchName2
+			.toLowerCase()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.split(' - ')
+			.map((teamNameArr) =>
+				teamNameArr
+					.split(' ')
+					.filter(
+						(word) => word.length > 1 && !bannedTeamWords.includes(word)
+					)
+					.join()
+			)
+
+		hasOppositeTeamOrder =
+			matchName1Normalized.join(' ') ===
+			matchName2Normalized.reverse().join(' ')
+	}
+
 	if (['0', '1', '2', '10', '02'].includes(optionName)) {
-		return optionName
+		if (!hasOppositeTeamOrder || optionName === '0') {
+			return optionName
+		} else {
+			const opposite = {
+				1: '2',
+				2: '1',
+				10: '02',
+				'02': '10',
+			}[optionName]
+
+			return opposite
+		}
 	}
 
 	if (optionName === 'Remíza') {
@@ -44,9 +91,9 @@ const formatMatchResultOption = (optionName, matchName) => {
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
 		.split(' - ')
-	const team1Name = matchSplitted[0]
-	const team2Name = matchSplitted[1]
-	const bannedTeamWords = process.env.BANNED_TEAM_WORDS?.split(',') || []
+
+	const team1Name = matchSplitted[hasOppositeTeamOrder ? 1 : 0]
+	const team2Name = matchSplitted[hasOppositeTeamOrder ? 0 : 1]
 
 	const team1NamePartsFound = team1Name
 		.split(' ')
@@ -106,7 +153,11 @@ const isOppositeOption = (
 
 	if (betName === 'Výsledok zápasu') {
 		const formatted1 = formatMatchResultOption(option1.name, matchName1)
-		const formatted2 = formatMatchResultOption(option2.name, matchName2)
+		const formatted2 = formatMatchResultOption(
+			option2.name,
+			matchName2,
+			matchName1
+		)
 		const isOpposite =
 			(formatted1 === '1' && formatted2 === '02') ||
 			(formatted1 === '10' && formatted2 === '2')
