@@ -13,7 +13,7 @@ const loadAndNormalizeBetsData = (match, sport) => {
 		const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sport}.json`
 		const rawData = fs.readFileSync(filePath, 'utf-8')
 		const data = JSON.parse(rawData)
-		const betsData = data.find((m) => m.id === match[scraperName]).bets
+		const betsData = data.find((m) => m.id === match[scraperName].id).bets
 		const normalizedBetsData = betsData.map((bet) => {
 			return {
 				id: bet.id,
@@ -27,14 +27,19 @@ const loadAndNormalizeBetsData = (match, sport) => {
 	return result
 }
 
-export const findSameBets = (sameMatches) => {
+export const findSameBets = () => {
 	const now = performance.now()
 	console.log('looking for the same bets...')
 
-	let totalFoundBetsCount = 0
+	const rawData = fs.readFileSync(
+		BASE_DATA_FOLDER_PATH + '/same-matches.json',
+		'utf-8'
+	)
+	const sameMatches = JSON.parse(rawData)
 	const sameBets = []
+	let totalFoundBetsCount = 0
 
-	sameMatches.forEach((match, index) => {
+	sameMatches.forEach((match) => {
 		const sport = match.sport
 		delete match.sport
 
@@ -81,20 +86,25 @@ export const findSameBets = (sameMatches) => {
 			})
 		})
 
-		sameBets.push({
-			...match,
-			sport,
-			bets,
-		})
+		if (bets.length) {
+			sameBets.push({
+				...match,
+				sport,
+				bets,
+			})
 
-		totalFoundBetsCount++
+			totalFoundBetsCount++
+		}
 	})
+
+	fs.writeFileSync(
+		`${BASE_DATA_FOLDER_PATH}/same-bets.json`,
+		JSON.stringify(sameBets, null, 3)
+	)
 
 	console.log(
 		`...found ${totalFoundBetsCount} bets in ${Math.round(
 			performance.now() - now
 		)}ms`
 	)
-
-	return sameBets
 }

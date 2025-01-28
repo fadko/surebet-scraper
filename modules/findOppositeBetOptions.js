@@ -33,10 +33,15 @@ const isOppositeOption = (option1, option2) => {
 	// TODO
 }
 
-export const findOppositeBetOptions = (sameBets) => {
+export const findOppositeBetOptions = () => {
 	const now = performance.now()
 	console.log('looking for opposite bet options...')
 
+	const rawData = fs.readFileSync(
+		BASE_DATA_FOLDER_PATH + '/same-bets.json',
+		'utf-8'
+	)
+	const sameBets = JSON.parse(rawData)
 	const sportsArr = Array.from(new Set(sameBets.map((bet) => bet.sport)))
 	const sportsData = loadSportsData(sportsArr)
 	const result = {}
@@ -57,7 +62,7 @@ export const findOppositeBetOptions = (sameBets) => {
 
 			Object.keys(bet).forEach((scraperName) => {
 				const match = sportsData[sportName][scraperName].find(
-					(m) => m.id === activeSameBetGroup[scraperName]
+					(m) => m.id === activeSameBetGroup[scraperName].id
 				)
 				const matchBet = match.bets.find((b) => b.id === bet[scraperName])
 				const options = matchBet.options
@@ -69,7 +74,7 @@ export const findOppositeBetOptions = (sameBets) => {
 
 			// get options for scraper with most options
 			const match = sportsData[sportName][largestOptionsScraperName].find(
-				(m) => m.id === activeSameBetGroup[largestOptionsScraperName]
+				(m) => m.id === activeSameBetGroup[largestOptionsScraperName].id
 			)
 			const matchBet = match.bets.find(
 				(b) => b.id === bet[largestOptionsScraperName]
@@ -84,7 +89,7 @@ export const findOppositeBetOptions = (sameBets) => {
 					.forEach((scraperName) => {
 						const currentScraperMatch = sportsData[sportName][
 							scraperName
-						].find((m) => m.id === activeSameBetGroup[scraperName])
+						].find((m) => m.id === activeSameBetGroup[scraperName].id)
 						const matchBet = currentScraperMatch.bets.find(
 							(b) => b.id === bet[scraperName]
 						)
@@ -101,12 +106,13 @@ export const findOppositeBetOptions = (sameBets) => {
 								result[sportName].push({
 									[largestOptionsScraperName]: {
 										matchId:
-											activeSameBetGroup[largestOptionsScraperName],
+											activeSameBetGroup[largestOptionsScraperName]
+												.id,
 										betId: bet[largestOptionsScraperName],
 										...optionToFind,
 									},
 									[scraperName]: {
-										matchId: activeSameBetGroup[scraperName],
+										matchId: activeSameBetGroup[scraperName].id,
 										betId: bet[scraperName],
 										...o,
 									},

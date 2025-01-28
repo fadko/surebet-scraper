@@ -96,8 +96,14 @@ const findMatches = (data) => {
 					if (hasSimilarName && timeDiff <= maxTimeDiff) {
 						foundMatches.push({
 							sport,
-							[scraperName]: match.id,
-							[largestArrayScraperName]: matchToFind.id,
+							[scraperName]: {
+								id: match.id,
+								name: match.name,
+							},
+							[largestArrayScraperName]: {
+								id: matchToFind.id,
+								name: matchToFind.name,
+							},
 						})
 					}
 				})
@@ -126,5 +132,8 @@ export const findSameMatches = () => {
 		)}ms`
 	)
 
-	return foundMatches
+	fs.writeFileSync(
+		`${BASE_DATA_FOLDER_PATH}/same-matches.json`,
+		JSON.stringify(foundMatches, null, 3)
+	)
 }

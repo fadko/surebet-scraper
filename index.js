@@ -10,9 +10,9 @@ import { findSureBet } from './modules/findSurebet.js'
 
 const init = async () => {
 	await scrape()
-	const sameMatches = findSameMatches()
-	const sameBets = findSameBets(sameMatches)
-	findOppositeBetOptions(sameBets)
+	findSameMatches()
+	findSameBets()
+	findOppositeBetOptions()
 	findSureBet()
 }
 
