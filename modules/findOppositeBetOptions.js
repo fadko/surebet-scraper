@@ -22,7 +22,7 @@ const loadSportsData = (sports) => {
 }
 
 const formatMatchResultOption = (optionName, matchName) => {
-	if (['0', '1', '2'].includes(optionName)) {
+	if (['0', '1', '2', '10', '02'].includes(optionName)) {
 		return optionName
 	}
 
@@ -30,13 +30,56 @@ const formatMatchResultOption = (optionName, matchName) => {
 		return '0'
 	}
 
-	const matchSplitted = matchName.split(' - ')
+	if (optionName === 'Nebude remíza') {
+		return '12'
+	}
 
-	if (optionName === matchSplitted[0]) {
+	const optionNameSplitted = optionName
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.split(' ')
+	const matchSplitted = matchName
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.split(' - ')
+	const team1Name = matchSplitted[0]
+	const team2Name = matchSplitted[1]
+
+	const team1NamePartsFound = team1Name
+		.split(' ')
+		.filter((namePart) => namePart.length > 1)
+		.map((namePart) => optionNameSplitted.includes(namePart))
+		.filter((b) => b === true).length
+	const team2NamePartsFound = team2Name
+		.split(' ')
+		.filter((namePart) => namePart.length > 1)
+		.map((namePart) => optionNameSplitted.includes(namePart))
+		.filter((b) => b === true).length
+
+	const team1Found =
+		!!team1NamePartsFound && team1NamePartsFound > team2NamePartsFound
+	const team2Found =
+		!!team2NamePartsFound && team2NamePartsFound > team1NamePartsFound
+
+	if (optionNameSplitted.includes('neprehra')) {
+		if (team1Found) {
+			return '10'
+		}
+
+		if (team2Found) {
+			return '02'
+		}
+
+		return null
+	}
+
+	if (team1Found) {
 		return '1'
 	}
 
-	if (optionName === matchSplitted[1]) {
+	if (team2Found) {
 		return '2'
 	}
 
@@ -57,11 +100,11 @@ const isOppositeOption = (
 	if (betName === 'Výsledok zápasu') {
 		const formatted1 = formatMatchResultOption(option1.name, matchName1)
 		const formatted2 = formatMatchResultOption(option2.name, matchName2)
+		const isOpposite =
+			(formatted1 === '1' && formatted2 === '02') ||
+			(formatted1 === '10' && formatted2 === '2')
 
-		return (
-			(formatted1 === '1' && formatted2 === '2') ||
-			(formatted1 === '2' && formatted2 === '1')
-		)
+		return isOpposite
 	}
 
 	if (option1.name.replace('Menej ako', 'Viac ako') === option2.name) {
@@ -133,7 +176,7 @@ export const findOppositeBetOptions = () => {
 						)
 
 						matchBet.options.forEach((o) => {
-							// find same bet option
+							// TODO find profitable same bet option
 							// if (o.name === optionToFind.name) {
 							// 	console.log(o.value, optionToFind.value)
 							// }
