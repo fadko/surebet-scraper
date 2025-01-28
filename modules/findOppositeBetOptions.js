@@ -46,15 +46,22 @@ const formatMatchResultOption = (optionName, matchName) => {
 		.split(' - ')
 	const team1Name = matchSplitted[0]
 	const team2Name = matchSplitted[1]
+	const bannedTeamWords = process.env.BANNED_TEAM_WORDS?.split(',') || []
 
 	const team1NamePartsFound = team1Name
 		.split(' ')
-		.filter((namePart) => namePart.length > 1)
+		.filter(
+			(namePart) =>
+				namePart.length > 1 && !bannedTeamWords.includes(namePart)
+		)
 		.map((namePart) => optionNameSplitted.includes(namePart))
 		.filter((b) => b === true).length
 	const team2NamePartsFound = team2Name
 		.split(' ')
-		.filter((namePart) => namePart.length > 1)
+		.filter(
+			(namePart) =>
+				namePart.length > 1 && !bannedTeamWords.includes(namePart)
+		)
 		.map((namePart) => optionNameSplitted.includes(namePart))
 		.filter((b) => b === true).length
 

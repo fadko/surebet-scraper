@@ -17,6 +17,7 @@ const formatMatchesData = (data) => {
 			.replaceAll('.', ' ')
 			.replaceAll(' / ', ' ')
 			.replaceAll('/', ' ')
+			.replace(/[\u0300-\u036f]/g, '')
 			.split(' ')
 			.filter((namePart) => namePart.length > 2)
 
@@ -51,6 +52,8 @@ const loadData = () => {
 }
 
 const findMatches = (data) => {
+	const bannedTeamWords = process.env.BANNED_TEAM_WORDS?.split(',') || []
+
 	let foundMatches = []
 	let totalMatches = 0
 
@@ -84,8 +87,10 @@ const findMatches = (data) => {
 
 				currentScraperMatches.forEach((match) => {
 					const hasSimilarName =
-						matchToFind.nameSplitted.filter((namePart) =>
-							match.nameSplitted.includes(namePart)
+						matchToFind.nameSplitted.filter(
+							(namePart) =>
+								match.nameSplitted.includes(namePart) &&
+								!bannedTeamWords.includes(namePart)
 						).length > 1
 					const timeDiff = Math.abs(
 						matchToFind.startsAtTs - match.startsAtTs
