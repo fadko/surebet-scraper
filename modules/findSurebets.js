@@ -12,7 +12,7 @@ const getMatchData = (scraperName, sportName, matchId) => {
 	return data.find((m) => m.id === matchId)
 }
 
-export const findSureBet = () => {
+export const findSureBets = () => {
 	const now = performance.now()
 	console.log('looking for sure bets...')
 
