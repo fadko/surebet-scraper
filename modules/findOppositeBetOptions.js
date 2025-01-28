@@ -21,16 +21,54 @@ const loadSportsData = (sports) => {
 	return result
 }
 
-const isOppositeOption = (option1, option2) => {
+const formatMatchResultOption = (optionName, matchName) => {
+	if (['0', '1', '2'].includes(optionName)) {
+		return optionName
+	}
+
+	if (optionName === 'Remíza') {
+		return '0'
+	}
+
+	const matchSplitted = matchName.split(' - ')
+
+	if (optionName === matchSplitted[0]) {
+		return '1'
+	}
+
+	if (optionName === matchSplitted[1]) {
+		return '2'
+	}
+
+	return null
+}
+
+const isOppositeOption = (
+	option1,
+	option2,
+	matchName1,
+	matchName2,
+	betName
+) => {
 	if (option1.name === option2.name) {
 		return false
+	}
+
+	if (betName === 'Výsledok zápasu') {
+		const formatted1 = formatMatchResultOption(option1.name, matchName1)
+		const formatted2 = formatMatchResultOption(option2.name, matchName2)
+
+		return (
+			(formatted1 === '1' && formatted2 === '2') ||
+			(formatted1 === '2' && formatted2 === '1')
+		)
 	}
 
 	if (option1.name.replace('Menej ako', 'Viac ako') === option2.name) {
 		return true
 	}
 
-	// TODO
+	return false
 }
 
 export const findOppositeBetOptions = () => {
@@ -100,7 +138,15 @@ export const findOppositeBetOptions = () => {
 							// 	console.log(o.value, optionToFind.value)
 							// }
 
-							if (isOppositeOption(o, optionToFind)) {
+							if (
+								isOppositeOption(
+									o,
+									optionToFind,
+									currentScraperMatch.name,
+									match.name,
+									matchBet.name
+								)
+							) {
 								totalFoundBetOptionsCount++
 
 								result[sportName].push({
