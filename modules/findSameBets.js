@@ -18,6 +18,7 @@ const loadAndNormalizeBetsData = (match, sport) => {
 			return {
 				id: bet.id,
 				name: normalizeAndSplitBetName(bet.name),
+				originalName: bet.name,
 			}
 		})
 
@@ -78,8 +79,14 @@ export const findSameBets = () => {
 
 					if (hasSimilarName) {
 						bets.push({
-							[scraperName]: bet.id,
-							[largestArrayScraperName]: betToFind.id,
+							[scraperName]: {
+								id: bet.id,
+								name: bet.originalName,
+							},
+							[largestArrayScraperName]: {
+								id: betToFind.id,
+								name: betToFind.originalName,
+							},
 						})
 					}
 				})

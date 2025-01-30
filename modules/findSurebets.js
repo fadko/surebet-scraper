@@ -68,7 +68,7 @@ export const findSureBets = () => {
 			)
 
 			let betData1 = matchData1.bets.find(
-				(b) => b.id === oppositeBets[scraperNames[0]].betId
+				(b) => b.id === oppositeBets[scraperNames[0]].bet.id
 			)
 
 			delete betData1.options
@@ -81,7 +81,7 @@ export const findSureBets = () => {
 			)
 
 			let betData2 = matchData2.bets.find(
-				(b) => b.id === oppositeBets[scraperNames[1]].betId
+				(b) => b.id === oppositeBets[scraperNames[1]].bet.id
 			)
 
 			delete betData2.options

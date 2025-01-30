@@ -166,7 +166,8 @@ const isOppositeOption = (
 
 	if (
 		option1.name.toLowerCase().replace('menej ako', 'viac ako') ===
-		option2.name.toLowerCase()
+			option2.name.toLowerCase() &&
+		option1.name.toLowerCase() !== option2.name.toLowerCase()
 	) {
 		return true
 	}
@@ -205,7 +206,9 @@ export const findOppositeBetOptions = () => {
 				const match = sportsData[sportName][scraperName].find(
 					(m) => m.id === activeSameBetGroup[scraperName].id
 				)
-				const matchBet = match.bets.find((b) => b.id === bet[scraperName])
+				const matchBet = match.bets.find(
+					(b) => b.id === bet[scraperName].id
+				)
 				const options = matchBet.options
 
 				if (options.length > largestScraperOptionsCount) {
@@ -218,7 +221,7 @@ export const findOppositeBetOptions = () => {
 				(m) => m.id === activeSameBetGroup[largestOptionsScraperName].id
 			)
 			const matchBet = match.bets.find(
-				(b) => b.id === bet[largestOptionsScraperName]
+				(b) => b.id === bet[largestOptionsScraperName].id
 			)
 
 			// compare with options from other scrapers
@@ -232,7 +235,7 @@ export const findOppositeBetOptions = () => {
 							scraperName
 						].find((m) => m.id === activeSameBetGroup[scraperName].id)
 						const matchBet = currentScraperMatch.bets.find(
-							(b) => b.id === bet[scraperName]
+							(b) => b.id === bet[scraperName].id
 						)
 
 						matchBet.options.forEach((o) => {
@@ -257,12 +260,12 @@ export const findOppositeBetOptions = () => {
 										matchId:
 											activeSameBetGroup[largestOptionsScraperName]
 												.id,
-										betId: bet[largestOptionsScraperName],
+										bet: bet[largestOptionsScraperName],
 										...optionToFind,
 									},
 									[scraperName]: {
 										matchId: activeSameBetGroup[scraperName].id,
-										betId: bet[scraperName],
+										bet: bet[scraperName],
 										...o,
 									},
 								})
