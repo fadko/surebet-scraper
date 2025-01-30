@@ -1,3 +1,5 @@
+// TODO stavka bez remizy?
+
 import fs from 'fs'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
@@ -25,40 +27,35 @@ const formatMatchResultOption = (optionName, matchName, matchName2) => {
 	const bannedTeamWords = process.env.BANNED_TEAM_WORDS?.split(',') || []
 	let hasOppositeTeamOrder = false
 
-	if (matchName2?.length && matchName.includes('USA')) {
-		const matchName1Normalized = matchName
-			.toLowerCase()
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.split(' - ')
-			.map((teamNameArr) =>
-				teamNameArr
-					.split(' ')
-					.filter(
-						(word) => word.length > 1 && !bannedTeamWords.includes(word)
-					)
-					.join()
-			)
-		const matchName2Normalized = matchName2
-			.toLowerCase()
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.split(' - ')
-			.map((teamNameArr) =>
-				teamNameArr
-					.split(' ')
-					.filter(
-						(word) => word.length > 1 && !bannedTeamWords.includes(word)
-					)
-					.join()
-			)
+	// wtf - if (matchName2?.length && matchName.includes('USA'))
+	if (matchName2?.length) {
+		const normalizeMatchName = (rawName) => {
+			return rawName
+				.toLowerCase()
+				.normalize('NFD')
+				.replace(/[\u0300-\u036f]/g, '')
+				.split(' - ')
+				.map((teamNameArr) =>
+					teamNameArr
+						.split(' ')
+						.filter(
+							(word) =>
+								word.length > 1 && !bannedTeamWords.includes(word)
+						)
+						.join()
+				)
+		}
+
+		const matchName1Normalized = normalizeMatchName(matchName)
+		const matchName2Normalized = normalizeMatchName(matchName2)
 
 		hasOppositeTeamOrder =
 			matchName1Normalized.join(' ') ===
 			matchName2Normalized.reverse().join(' ')
 	}
 
-	if (['0', '1', '2', '10', '02'].includes(optionName)) {
+	// TODO nazov timu namiesto 1 alebo 2
+	if (['0', '1', '2', '10', '1X', '02', 'X2'].includes(optionName)) {
 		if (!hasOppositeTeamOrder || optionName === '0') {
 			return optionName
 		} else {
@@ -66,18 +63,20 @@ const formatMatchResultOption = (optionName, matchName, matchName2) => {
 				1: '2',
 				2: '1',
 				10: '02',
+				'1X': '02',
 				'02': '10',
+				X2: '10',
 			}[optionName]
 
 			return opposite
 		}
 	}
 
-	if (optionName === 'Remíza') {
+	if (optionName.toLowerCase() === 'remíza') {
 		return '0'
 	}
 
-	if (optionName === 'Nebude remíza') {
+	if (optionName.toLowerCase() === 'nebude remíza') {
 		return '12'
 	}
 
@@ -151,7 +150,7 @@ const isOppositeOption = (
 		return false
 	}
 
-	if (betName === 'Výsledok zápasu') {
+	if (['výsledok zápasu', 'zápas'].includes(betName.toLowerCase())) {
 		const formatted1 = formatMatchResultOption(option1.name, matchName1)
 		const formatted2 = formatMatchResultOption(
 			option2.name,
@@ -165,7 +164,10 @@ const isOppositeOption = (
 		return isOpposite
 	}
 
-	if (option1.name.replace('Menej ako', 'Viac ako') === option2.name) {
+	if (
+		option1.name.toLowerCase().replace('menej ako', 'viac ako') ===
+		option2.name.toLowerCase()
+	) {
 		return true
 	}
 

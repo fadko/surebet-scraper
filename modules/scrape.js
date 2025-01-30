@@ -1,6 +1,10 @@
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-extra'
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { scrapeTipsport } from '../scrapers/tipsport.js'
 import { scrapeFortuna } from '../scrapers/fortuna.js'
+import { scrapeNike } from '../scrapers/nike.js'
+
+puppeteer.use(StealthPlugin())
 
 export const scrape = async () => {
 	const now = performance.now()
@@ -11,11 +15,15 @@ export const scrape = async () => {
 	if (enabledScrapers?.length) {
 		const browser = await puppeteer.launch({
 			devtools: false,
-			headless: true,
+			headless: false,
 			args: [
-				'--window-size=1920,1080',
+				'--window-size=1512,908',
 				'--disable-blink-features=AutomationControlled',
 			],
+			defaultViewport: {
+				width: 1512,
+				height: 773,
+			},
 		})
 
 		if (enabledScrapers.includes('tipsport')) {
@@ -24,6 +32,10 @@ export const scrape = async () => {
 
 		if (enabledScrapers.includes('fortuna')) {
 			await scrapeFortuna(browser)
+		}
+
+		if (enabledScrapers.includes('nike')) {
+			await scrapeNike(browser)
 		}
 
 		await browser.close()
