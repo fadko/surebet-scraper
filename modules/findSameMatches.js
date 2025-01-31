@@ -78,6 +78,8 @@ const findMatches = (data) => {
 		const largestScraperMatches = data[sport][largestArrayScraperName]
 
 		largestScraperMatches.forEach((matchToFind) => {
+			const foundMatchScrapers = []
+
 			Object.keys(data[sport]).forEach((scraperName) => {
 				if (scraperName === largestArrayScraperName) {
 					return
@@ -99,20 +101,36 @@ const findMatches = (data) => {
 					const maxTimeDiff = 1 * 60 * 60 * 1000
 
 					if (hasSimilarName && timeDiff <= maxTimeDiff) {
-						foundMatches.push({
-							sport,
+						if (!foundMatchScrapers.length) {
+							foundMatchScrapers.push({
+								[largestArrayScraperName]: {
+									id: matchToFind.id,
+									name: matchToFind.name,
+								},
+							})
+						}
+
+						foundMatchScrapers.push({
 							[scraperName]: {
 								id: match.id,
 								name: match.name,
-							},
-							[largestArrayScraperName]: {
-								id: matchToFind.id,
-								name: matchToFind.name,
 							},
 						})
 					}
 				})
 			})
+
+			if (foundMatchScrapers.length) {
+				const res = {
+					sport,
+				}
+
+				foundMatchScrapers.forEach((m) => {
+					res[Object.keys(m)[0]] = m[Object.keys(m)[0]]
+				})
+
+				foundMatches.push(res)
+			}
 		})
 	})
 

@@ -1,3 +1,5 @@
+// TODO neporovnavaju sa vsetky stavkove medzi sebou
+
 import fs from 'fs'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
@@ -40,7 +42,7 @@ export const findSameBets = () => {
 	const sameBets = []
 	let totalFoundBetsCount = 0
 
-	sameMatches.forEach((match) => {
+	sameMatches.forEach((match, matchIndex) => {
 		const sport = match.sport
 		delete match.sport
 
@@ -62,7 +64,9 @@ export const findSameBets = () => {
 
 		let bets = []
 
-		largestScraperBets.forEach((betToFind) => {
+		largestScraperBets.forEach((betToFind, betIndex) => {
+			let tempResult = []
+
 			Object.keys(betsData).forEach((scraperName) => {
 				if (scraperName === largestArrayScraperName) {
 					return
@@ -78,19 +82,34 @@ export const findSameBets = () => {
 						betToFind.name.length === bet.name.length
 
 					if (hasSimilarName) {
-						bets.push({
+						if (!tempResult.length) {
+							tempResult.push({
+								[largestArrayScraperName]: {
+									id: betToFind.id,
+									name: betToFind.originalName,
+								},
+							})
+						}
+
+						tempResult.push({
 							[scraperName]: {
 								id: bet.id,
 								name: bet.originalName,
-							},
-							[largestArrayScraperName]: {
-								id: betToFind.id,
-								name: betToFind.originalName,
 							},
 						})
 					}
 				})
 			})
+
+			if (tempResult.length) {
+				const result = {}
+
+				tempResult.forEach((r) => {
+					result[Object.keys(r)[0]] = r[Object.keys(r)[0]]
+				})
+
+				bets.push(result)
+			}
 		})
 
 		if (bets.length) {

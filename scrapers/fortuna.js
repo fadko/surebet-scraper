@@ -17,6 +17,7 @@ const getTsFromRawDate = (rawDate) => {
 			zone: 'Europe/Bratislava',
 		})
 	} catch {
+	} finally {
 		date = DateTime.fromFormat(rawDate, 'd.M. HH:mm', {
 			zone: 'Europe/Bratislava',
 		})
