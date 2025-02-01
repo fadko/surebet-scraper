@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
+import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
 const MATCHES_LIMIT = 100
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/tiposbet'
@@ -11,6 +12,7 @@ const MENU_ELEMENTS_SELECTOR = '[data-test-role="sport-categories"] .nav-item'
 const onInit = async (page) => {
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
 
+	await setPageRequestInterception(page)
 	await page.setUserAgent(process.env.CUSTOM_UA)
 
 	await page.goto(BASE_URL + '/sk/top5', {

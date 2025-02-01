@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
+import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/nike'
 const BASE_URL = 'https://www.nike.sk'
@@ -11,6 +12,7 @@ const LEAGUE_GROUP_SELECTOR = '.boxes-inner-view .boxes-view'
 const onInit = async (page) => {
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
 
+	await setPageRequestInterception(page)
 	await page.setUserAgent(process.env.CUSTOM_UA)
 
 	await page.goto(BASE_URL + '/tipovanie', {

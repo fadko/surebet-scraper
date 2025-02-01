@@ -3,6 +3,7 @@
 import { DateTime } from 'luxon'
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
+import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/tipsport'
 const MENU_ELEMENTS_SELECTOR = '[class^="Menustyled__FirstLvlTitle"]'
@@ -30,6 +31,7 @@ export const scrapeTipsport = async (browser) => {
 
 	const page = await browser.newPage()
 
+	await setPageRequestInterception(page)
 	await page.setUserAgent(process.env.CUSTOM_UA)
 
 	await page.emulateTimezone('Europe/Bratislava')

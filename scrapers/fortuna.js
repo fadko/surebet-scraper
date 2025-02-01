@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
+import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/fortuna'
 const MENU_ELEMENTS_SELECTOR = '.sport-tree:nth-child(1) .btn-sport'
@@ -33,6 +34,8 @@ export const scrapeFortuna = async (browser) => {
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
 
 	const page = await browser.newPage()
+
+	await setPageRequestInterception(page)
 
 	await page.setUserAgent(process.env.CUSTOM_UA)
 
