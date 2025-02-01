@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 import fs from 'fs'
 
-const MATCHES_LIMIT = 50
+const MATCHES_LIMIT = 100
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/tiposbet'
 const BASE_URL = 'https://tipkurz.etipos.sk'
 const TRACKED_SPORTS = process.env.TRACKED_SPORTS?.split(',')
@@ -254,7 +254,6 @@ const scrapeSport = async (menuDataItem, page) => {
 
 export const scrapeTiposbet = async (browser) => {
 	const start = performance.now()
-	console.log('scraping tiposbet...')
 
 	const page = await browser.newPage()
 	await onInit(page)

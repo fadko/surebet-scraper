@@ -24,7 +24,6 @@ const getTsFromRawDate = (rawDate) => {
 
 export const scrapeTipsport = async (browser) => {
 	const start = performance.now()
-	console.log('scraping tipsport...')
 
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
 

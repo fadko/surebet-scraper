@@ -138,7 +138,7 @@ export const findSureBets = () => {
 		)}ms`
 	)
 
-	if (totalSureBetsCount === 0) {
+	if (!totalSureBetsCount && totalBetsCount) {
 		console.log(`lowest arb ratio found: ${lowestArbRatio}`)
 	}
 }

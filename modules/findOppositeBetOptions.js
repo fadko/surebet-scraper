@@ -290,4 +290,5 @@ export const findOppositeBetOptions = () => {
 			performance.now() - now
 		)}ms`
 	)
+	console.log('\n')
 }

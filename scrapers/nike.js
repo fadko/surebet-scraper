@@ -190,7 +190,6 @@ const scrapeSport = async (menuDataItem, page) => {
 
 export const scrapeNike = async (browser) => {
 	const start = performance.now()
-	console.log('scraping nike...')
 
 	const page = await browser.newPage()
 	await onInit(page)

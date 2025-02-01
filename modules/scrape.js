@@ -11,14 +11,14 @@ puppeteer.use(StealthPlugin())
 
 export const scrape = async () => {
 	const now = performance.now()
-	console.log('scraping starts...')
+	console.log(`scraping ${process.env.ENABLED_SCRAPERS}...`)
 
 	const enabledScrapers = process.env.ENABLED_SCRAPERS?.split(',')
 
 	if (enabledScrapers?.length) {
 		const browser = await puppeteer.launch({
 			devtools: false,
-			headless: false,
+			headless: process.env.HEADLESS_BROWSER === 'true',
 			args: [
 				'--window-size=1512,908',
 				'--disable-blink-features=AutomationControlled',
@@ -29,21 +29,25 @@ export const scrape = async () => {
 			},
 		})
 
+		let promises = []
+
 		if (enabledScrapers.includes('tipsport')) {
-			await scrapeTipsport(browser)
+			promises.push(scrapeTipsport(browser))
 		}
 
 		if (enabledScrapers.includes('fortuna')) {
-			await scrapeFortuna(browser)
+			promises.push(scrapeFortuna(browser))
 		}
 
 		if (enabledScrapers.includes('nike')) {
-			await scrapeNike(browser)
+			promises.push(scrapeNike(browser))
 		}
 
 		if (enabledScrapers.includes('tiposbet')) {
-			await scrapeTiposbet(browser)
+			promises.push(scrapeTiposbet(browser))
 		}
+
+		await Promise.all(promises)
 
 		await browser.close()
 	}
@@ -53,4 +57,5 @@ export const scrape = async () => {
 			(performance.now() - now) / 1000
 		)} seconds`
 	)
+	console.log('\n')
 }

@@ -148,6 +148,11 @@ export const findSameMatches = () => {
 	const data = loadData()
 	const { foundMatches, totalMatches } = findMatches(data)
 
+	fs.writeFileSync(
+		`${BASE_DATA_FOLDER_PATH}/same-matches.json`,
+		JSON.stringify(foundMatches, null, 3)
+	)
+
 	console.log(
 		`...found ${
 			foundMatches.length
@@ -155,9 +160,5 @@ export const findSameMatches = () => {
 			performance.now() - now
 		)}ms`
 	)
-
-	fs.writeFileSync(
-		`${BASE_DATA_FOLDER_PATH}/same-matches.json`,
-		JSON.stringify(foundMatches, null, 3)
-	)
+	console.log('\n')
 }

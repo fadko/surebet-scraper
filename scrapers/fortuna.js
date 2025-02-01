@@ -28,7 +28,6 @@ const getTsFromRawDate = (rawDate) => {
 
 export const scrapeFortuna = async (browser) => {
 	const start = performance.now()
-	console.log('scraping fortuna...')
 
 	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
 

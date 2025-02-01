@@ -162,4 +162,5 @@ export const findSameBets = () => {
 			performance.now() - now
 		)}ms`
 	)
+	console.log('\n')
 }
