@@ -93,7 +93,7 @@ export const scrapeTipsport = async (browser) => {
 				return document.body.scrollHeight
 			})
 
-			// TODO randomize
+			// TODO speed up / randomize
 			await new Promise((res) => setTimeout(res, 1000))
 
 			if (newHeight === previousHeight) {

@@ -93,6 +93,7 @@ export const findSureBets = () => {
 					{
 						company: scraperNames[0],
 						value: value1,
+						distributionPercent: distributedBets[scraperNames[0]],
 						profit: profit[scraperNames[0]],
 						bet: {
 							name: betData1.name,
@@ -103,6 +104,7 @@ export const findSureBets = () => {
 					{
 						company: scraperNames[1],
 						value: value2,
+						distributionPercent: distributedBets[scraperNames[1]],
 						profit: profit[scraperNames[1]],
 						bet: {
 							name: betData2.name,

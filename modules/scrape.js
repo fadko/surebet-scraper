@@ -1,3 +1,5 @@
+// TODO tiposbet, doxxbet, synottip
+
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { scrapeTipsport } from '../scrapers/tipsport.js'
