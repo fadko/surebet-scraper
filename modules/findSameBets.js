@@ -1,6 +1,7 @@
 // TODO neporovnavaju sa vsetky stavkove medzi sebou
 
 import fs from 'fs'
+import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
@@ -58,7 +59,7 @@ const checkIsSame = (name1, name2) => {
 
 export const findSameBets = () => {
 	const now = performance.now()
-	console.log('looking for the same bets...')
+	log('looking for the same bets...')
 
 	const rawData = fs.readFileSync(
 		BASE_DATA_FOLDER_PATH + '/same-matches.json',
@@ -157,10 +158,10 @@ export const findSameBets = () => {
 		JSON.stringify(sameBets, null, 3)
 	)
 
-	console.log(
+	log(
 		`...found ${totalFoundBetsCount} bets in ${Math.round(
 			performance.now() - now
-		)}ms`
+		)}ms`,
+		true
 	)
-	console.log('\n')
 }

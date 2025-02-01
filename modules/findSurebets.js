@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
@@ -14,7 +15,7 @@ const getMatchData = (scraperName, sportName, matchId) => {
 
 export const findSureBets = () => {
 	const now = performance.now()
-	console.log('looking for sure bets...')
+	log('looking for sure bets...')
 
 	const rawData = fs.readFileSync(
 		`${BASE_DATA_FOLDER_PATH}/opposite-bet-options.json`,
@@ -132,13 +133,13 @@ export const findSureBets = () => {
 		JSON.stringify(result, null, 3)
 	)
 
-	console.log(
+	log(
 		`...found ${totalSureBetsCount} sure bets from total ${totalBetsCount} bets in ${Math.round(
 			performance.now() - now
 		)}ms`
 	)
 
 	if (!totalSureBetsCount && totalBetsCount) {
-		console.log(`lowest arb ratio found: ${lowestArbRatio}`)
+		log(`lowest arb ratio found: ${lowestArbRatio}`)
 	}
 }

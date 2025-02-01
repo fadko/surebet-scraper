@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 import fs from 'fs'
+import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/fortuna'
 const MENU_ELEMENTS_SELECTOR = '.sport-tree:nth-child(1) .btn-sport'
@@ -374,7 +375,7 @@ export const scrapeFortuna = async (browser) => {
 		)
 	}
 
-	console.log(
+	log(
 		`...fortuna scraped in ${Math.round(
 			(performance.now() - start) / 1000
 		)} seconds`

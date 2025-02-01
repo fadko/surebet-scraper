@@ -6,12 +6,13 @@ import { scrapeTipsport } from '../scrapers/tipsport.js'
 import { scrapeFortuna } from '../scrapers/fortuna.js'
 import { scrapeNike } from '../scrapers/nike.js'
 import { scrapeTiposbet } from '../scrapers/tiposbet.js'
+import { log } from '../helpers/logger.js'
 
 puppeteer.use(StealthPlugin())
 
 export const scrape = async () => {
 	const now = performance.now()
-	console.log(`scraping ${process.env.ENABLED_SCRAPERS}...`)
+	log(`scraping ${process.env.ENABLED_SCRAPERS}...`)
 
 	const enabledScrapers = process.env.ENABLED_SCRAPERS?.split(',')
 
@@ -31,10 +32,6 @@ export const scrape = async () => {
 
 		let promises = []
 
-		if (enabledScrapers.includes('tipsport')) {
-			promises.push(scrapeTipsport(browser))
-		}
-
 		if (enabledScrapers.includes('fortuna')) {
 			promises.push(scrapeFortuna(browser))
 		}
@@ -47,15 +44,20 @@ export const scrape = async () => {
 			promises.push(scrapeTiposbet(browser))
 		}
 
+		// needs to be last in promises array!
+		if (enabledScrapers.includes('tipsport')) {
+			promises.push(scrapeTipsport(browser))
+		}
+
 		await Promise.all(promises)
 
 		await browser.close()
 	}
 
-	console.log(
+	log(
 		`...scraping ended in ${Math.round(
 			(performance.now() - now) / 1000
-		)} seconds`
+		)} seconds`,
+		true
 	)
-	console.log('\n')
 }

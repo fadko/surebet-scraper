@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
@@ -37,15 +38,24 @@ const loadData = () => {
 
 		enabledScrapers?.map((scraperName) => {
 			const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sportName}.json`
-			const rawData = fs.readFileSync(filePath, 'utf-8')
-			const data = JSON.parse(rawData)
-			const formattedData = formatMatchesData(data)
 
-			const filteredData = formattedData.filter((match) => {
-				return filterMatchData(match)
-			})
+			try {
+				const rawData = fs.readFileSync(filePath, 'utf-8')
+				const data = JSON.parse(rawData)
+				const formattedData = formatMatchesData(data)
 
-			result[sportName][scraperName] = filteredData
+				const filteredData = formattedData.filter((match) => {
+					return filterMatchData(match)
+				})
+
+				result[sportName][scraperName] = filteredData
+			} catch (err) {
+				log(
+					`failed to load ${scraperName} ${sportName} data - ${err}`,
+					false,
+					'error'
+				)
+			}
 		})
 	})
 
@@ -143,7 +153,7 @@ const findMatches = (data) => {
 
 export const findSameMatches = () => {
 	const now = performance.now()
-	console.log('looking for the same matches...')
+	log('looking for the same matches...')
 
 	const data = loadData()
 	const { foundMatches, totalMatches } = findMatches(data)
@@ -153,12 +163,12 @@ export const findSameMatches = () => {
 		JSON.stringify(foundMatches, null, 3)
 	)
 
-	console.log(
+	log(
 		`...found ${
 			foundMatches.length
 		} from total ${totalMatches} matches in ${Math.round(
 			performance.now() - now
-		)}ms`
+		)}ms`,
+		true
 	)
-	console.log('\n')
 }

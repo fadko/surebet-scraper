@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 import fs from 'fs'
+import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/nike'
 const BASE_URL = 'https://www.nike.sk'
@@ -199,7 +200,7 @@ export const scrapeNike = async (browser) => {
 		await scrapeSport(menuDataItem, page)
 	}
 
-	console.log(
+	log(
 		`...nike scraped in ${Math.round(
 			(performance.now() - start) / 1000
 		)} seconds`

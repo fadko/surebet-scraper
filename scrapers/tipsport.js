@@ -2,6 +2,7 @@
 
 import { DateTime } from 'luxon'
 import fs from 'fs'
+import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FILE_PATH = process.cwd() + '/data/tipsport'
 const MENU_ELEMENTS_SELECTOR = '[class^="Menustyled__FirstLvlTitle"]'
@@ -182,6 +183,11 @@ export const scrapeTipsport = async (browser) => {
 					BETS_SELECTOR
 				)
 			} catch {
+				log(
+					`tipsport scraper error in page.waitForFunction for selector ${BETS_SELECTOR}`,
+					false,
+					'error'
+				)
 				return
 			}
 
@@ -247,7 +253,7 @@ export const scrapeTipsport = async (browser) => {
 		)
 	}
 
-	console.log(
+	log(
 		`...tipsport scraped in ${Math.round(
 			(performance.now() - start) / 1000
 		)} seconds`

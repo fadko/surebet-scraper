@@ -1,6 +1,7 @@
 // TODO stavka bez remizy?
 
 import fs from 'fs'
+import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
@@ -181,7 +182,7 @@ const isOppositeOption = (
 
 export const findOppositeBetOptions = () => {
 	const now = performance.now()
-	console.log('looking for opposite bet options...')
+	log('looking for opposite bet options...')
 
 	const rawData = fs.readFileSync(
 		BASE_DATA_FOLDER_PATH + '/same-bets.json',
@@ -285,10 +286,10 @@ export const findOppositeBetOptions = () => {
 		JSON.stringify(result, null, 3)
 	)
 
-	console.log(
+	log(
 		`...found ${totalFoundBetOptionsCount} opposite bet options in ${Math.round(
 			performance.now() - now
-		)}ms`
+		)}ms`,
+		true
 	)
-	console.log('\n')
 }
