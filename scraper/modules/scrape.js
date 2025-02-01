@@ -12,7 +12,10 @@ puppeteer.use(StealthPlugin())
 
 export const scrape = async () => {
 	const now = performance.now()
-	log(`scraping ${process.env.ENABLED_SCRAPERS}...`)
+
+	log(
+		`scraping ${process.env.ENABLED_SCRAPERS} for ${process.env.TRACKED_SPORTS}...`
+	)
 
 	const enabledScrapers = process.env.ENABLED_SCRAPERS?.split(',')
 

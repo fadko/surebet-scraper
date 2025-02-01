@@ -7,7 +7,7 @@ import { DateTime } from 'luxon'
  * @param {'info' | 'warn' | 'error'} level
  */
 export const log = (message, addNewLine = false, level = 'info') => {
-	const dateStr = DateTime.now().toFormat('dd.MM.yy HH:mm')
+	const dateStr = DateTime.now().toFormat('dd.MM.yy HH:mm:ss')
 	console[level](`[${dateStr}] ${message}`)
 
 	if (addNewLine) {

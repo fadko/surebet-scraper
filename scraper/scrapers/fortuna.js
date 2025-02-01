@@ -8,7 +8,11 @@ const MENU_ELEMENTS_SELECTOR = '.sport-tree:nth-child(1) .btn-sport'
 
 const getTsFromRawDate = (rawDate) => {
 	if (!rawDate?.length) {
-		console.error('fortuna scraper - getTsFromRawDate rawDate param missing')
+		log(
+			'fortuna scraper - getTsFromRawDate rawDate param missing',
+			false,
+			'warn'
+		)
 		return Date.now()
 	}
 
