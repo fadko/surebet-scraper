@@ -150,7 +150,11 @@ const isOppositeOption = (
 		return false
 	}
 
-	if (['výsledok zápasu', 'zápas'].includes(betName.toLowerCase())) {
+	if (
+		['výsledok zápasu', 'zápas', 'víťaz zápasu'].includes(
+			betName.toLowerCase()
+		)
+	) {
 		const formatted1 = formatMatchResultOption(option1.name, matchName1)
 		const formatted2 = formatMatchResultOption(
 			option2.name,

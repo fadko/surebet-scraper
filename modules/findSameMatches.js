@@ -15,6 +15,7 @@ const formatMatchesData = (data) => {
 			.normalize('NFD')
 			.replaceAll('. ', ' ')
 			.replaceAll('.', ' ')
+			.replaceAll(',', '')
 			.replaceAll(' / ', ' ')
 			.replaceAll('/', ' ')
 			.replace(/[\u0300-\u036f]/g, '')

@@ -30,6 +30,32 @@ const loadAndNormalizeBetsData = (match, sport) => {
 	return result
 }
 
+const checkIsSame = (name1, name2) => {
+	const name1Normalized = name1
+		.join(' ')
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+	const name2Normalized = name2
+		.join(' ')
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+
+	const sameNamesGroups = [
+		[
+			'presny pocet setov',
+			'pocet setov',
+			'pocet setov v zápase (na dva vitazne)',
+		],
+		['pocet gemov', 'celkovy pocet gemov'],
+	]
+
+	return sameNamesGroups.some(
+		(namesGroup) =>
+			namesGroup.includes(name1Normalized) &&
+			namesGroup.includes(name2Normalized)
+	)
+}
+
 export const findSameBets = () => {
 	const now = performance.now()
 	console.log('looking for the same bets...')
@@ -75,13 +101,16 @@ export const findSameBets = () => {
 				const currentScraperBets = betsData[scraperName]
 
 				currentScraperBets.forEach((bet) => {
+					// TODO odstranit a presunut vsetko do checkIsSame
 					const hasSimilarName =
 						betToFind.name.filter((namePart) =>
 							bet.name.includes(namePart)
 						).length > Math.min(betToFind.name.length - 1) &&
 						betToFind.name.length === bet.name.length
 
-					if (hasSimilarName) {
+					const isSame = checkIsSame(betToFind.name, bet.name)
+
+					if (hasSimilarName || isSame) {
 						if (!tempResult.length) {
 							tempResult.push({
 								[largestArrayScraperName]: {

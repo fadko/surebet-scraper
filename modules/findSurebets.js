@@ -24,13 +24,21 @@ export const findSureBets = () => {
 
 	const result = []
 	let totalSureBetsCount = 0
+	let totalBetsCount = 0
+	let lowestArbRatio = Infinity
 
 	Object.keys(data).forEach((sport) => {
 		data[sport].forEach((oppositeBets) => {
+			totalBetsCount++
+
 			const scraperNames = Object.keys(oppositeBets)
 			const value1 = oppositeBets[scraperNames[0]].value
 			const value2 = oppositeBets[scraperNames[1]].value
 			const arbRatio = 1 / value1 + 1 / value2
+
+			if (arbRatio < lowestArbRatio) {
+				lowestArbRatio = arbRatio
+			}
 
 			if (arbRatio >= 1) {
 				return
@@ -125,8 +133,12 @@ export const findSureBets = () => {
 	)
 
 	console.log(
-		`...found ${totalSureBetsCount} sure bets in ${Math.round(
+		`...found ${totalSureBetsCount} sure bets from total ${totalBetsCount} bets in ${Math.round(
 			performance.now() - now
 		)}ms`
 	)
+
+	if (totalSureBetsCount === 0) {
+		console.log(`lowest arb ratio found: ${lowestArbRatio}`)
+	}
 }
