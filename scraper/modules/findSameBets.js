@@ -1,5 +1,3 @@
-// TODO neporovnavaju sa vsetky stavkove medzi sebou
-
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
 
@@ -67,7 +65,9 @@ export const findSameBets = () => {
 	)
 	const sameMatches = JSON.parse(rawData)
 	const sameBets = []
+	let totalFoundMatchesCount = 0
 	let totalFoundBetsCount = 0
+	let totalFoundScraperBetsCount = 0
 
 	sameMatches.forEach((match, matchIndex) => {
 		const sport = match.sport
@@ -119,6 +119,8 @@ export const findSameBets = () => {
 									name: betToFind.originalName,
 								},
 							})
+
+							totalFoundScraperBetsCount++
 						}
 
 						tempResult.push({
@@ -127,6 +129,8 @@ export const findSameBets = () => {
 								name: bet.originalName,
 							},
 						})
+
+						totalFoundScraperBetsCount++
 					}
 				})
 			})
@@ -139,6 +143,7 @@ export const findSameBets = () => {
 				})
 
 				bets.push(result)
+				totalFoundBetsCount++
 			}
 		})
 
@@ -149,7 +154,7 @@ export const findSameBets = () => {
 				bets,
 			})
 
-			totalFoundBetsCount++
+			totalFoundMatchesCount++
 		}
 	})
 
@@ -159,7 +164,7 @@ export const findSameBets = () => {
 	)
 
 	log(
-		`...found ${totalFoundBetsCount} bets in ${Math.round(
+		`...found ${totalFoundBetsCount} same bets (${totalFoundScraperBetsCount} total unique entries) in ${totalFoundMatchesCount} matches in ${Math.round(
 			performance.now() - now
 		)}ms`,
 		true
