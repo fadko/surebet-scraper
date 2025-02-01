@@ -28,7 +28,6 @@ const formatMatchResultOption = (optionName, matchName, matchName2) => {
 	const bannedTeamWords = process.env.BANNED_TEAM_WORDS?.split(',') || []
 	let hasOppositeTeamOrder = false
 
-	// wtf - if (matchName2?.length && matchName.includes('USA'))
 	if (matchName2?.length) {
 		const normalizeMatchName = (rawName) => {
 			return rawName
@@ -44,6 +43,9 @@ const formatMatchResultOption = (optionName, matchName, matchName2) => {
 								word.length > 1 && !bannedTeamWords.includes(word)
 						)
 						.join()
+						.replaceAll(',', ' ')
+						.replaceAll('.', '')
+						.replaceAll('  ', ' ')
 				)
 		}
 
@@ -55,7 +57,6 @@ const formatMatchResultOption = (optionName, matchName, matchName2) => {
 			matchName2Normalized.reverse().join(' ')
 	}
 
-	// TODO nazov timu namiesto 1 alebo 2
 	if (['0', '1', '2', '10', '1X', '02', 'X2'].includes(optionName)) {
 		if (!hasOppositeTeamOrder || optionName === '0') {
 			return optionName
@@ -71,6 +72,31 @@ const formatMatchResultOption = (optionName, matchName, matchName2) => {
 
 			return opposite
 		}
+	}
+
+	// nazov timu namiesto 1 alebo 2
+	if (
+		matchName.includes(' - ') &&
+		matchName.split(' - ')?.includes(optionName)
+	) {
+		const index = matchName.split(' - ').indexOf(optionName)
+		let result = ''
+
+		if (!hasOppositeTeamOrder) {
+			if (index === 0) {
+				result = '1'
+			} else if (index === 1) {
+				result = '2'
+			}
+		} else {
+			if (index === 0) {
+				result = '2'
+			} else if (index === 1) {
+				result = '1'
+			}
+		}
+
+		return result
 	}
 
 	if (optionName.toLowerCase() === 'remíza') {
@@ -145,7 +171,8 @@ const isOppositeOption = (
 	option2,
 	matchName1,
 	matchName2,
-	betName
+	betName,
+	is1or2
 ) => {
 	if (option1.name === option2.name) {
 		return false
@@ -162,9 +189,15 @@ const isOppositeOption = (
 			matchName2,
 			matchName1
 		)
-		const isOpposite =
-			(formatted1 === '1' && formatted2 === '02') ||
-			(formatted1 === '10' && formatted2 === '2')
+		let isOpposite
+
+		if (is1or2) {
+			isOpposite = formatted1 === '1' && formatted2 === '2'
+		} else {
+			isOpposite =
+				(formatted1 === '1' && formatted2 === '02') ||
+				(formatted1 === '10' && formatted2 === '2')
+		}
 
 		return isOpposite
 	}
@@ -239,15 +272,19 @@ export const findOppositeBetOptions = () => {
 						const currentScraperMatch = sportsData[sportName][
 							scraperName
 						].find((m) => m.id === activeSameBetGroup[scraperName].id)
-						const matchBet = currentScraperMatch.bets.find(
+						const currentMatchBet = currentScraperMatch.bets.find(
 							(b) => b.id === bet[scraperName].id
 						)
 
-						matchBet.options.forEach((o) => {
+						currentMatchBet.options.forEach((o) => {
 							// TODO find profitable same bet option
 							// if (o.name === optionToFind.name) {
 							// 	console.log(o.value, optionToFind.value)
 							// }
+
+							const is1or2 =
+								currentMatchBet.options.length === 2 &&
+								matchBet.options.length === 2
 
 							if (
 								isOppositeOption(
@@ -255,7 +292,8 @@ export const findOppositeBetOptions = () => {
 									optionToFind,
 									currentScraperMatch.name,
 									match.name,
-									matchBet.name
+									currentMatchBet.name,
+									is1or2
 								)
 							) {
 								totalFoundBetOptionsCount++

@@ -44,9 +44,9 @@ const loadData = () => {
 				const data = JSON.parse(rawData)
 				const formattedData = formatMatchesData(data)
 
-				const filteredData = formattedData.filter((match) => {
-					return filterMatchData(match)
-				})
+				const filteredData = formattedData.filter((match) =>
+					filterMatchData(match)
+				)
 
 				result[sportName][scraperName] = filteredData
 			} catch (err) {
