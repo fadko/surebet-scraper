@@ -5,7 +5,7 @@ import fs from 'fs'
 import { log } from '../helpers/logger.js'
 import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
-const BASE_DATA_FILE_PATH = process.cwd() + '/data/tipsport'
+const BASE_DATA_FILE_PATH = process.cwd() + '/scraper/data/tipsport'
 const MENU_ELEMENTS_SELECTOR = '[class^="Menustyled__FirstLvlTitle"]'
 const MATCH_ROW_SELECTOR = '[class^="Matchstyled__Row"]'
 const BETS_SELECTOR =

@@ -3,7 +3,7 @@ import fs from 'fs'
 import { log } from '../helpers/logger.js'
 import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
-const BASE_DATA_FILE_PATH = process.cwd() + '/data/fortuna'
+const BASE_DATA_FILE_PATH = process.cwd() + '/scraper/data/fortuna'
 const MENU_ELEMENTS_SELECTOR = '.sport-tree:nth-child(1) .btn-sport'
 
 const getTsFromRawDate = (rawDate) => {

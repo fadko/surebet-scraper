@@ -3,7 +3,7 @@ import fs from 'fs'
 import { log } from '../helpers/logger.js'
 import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
-const BASE_DATA_FILE_PATH = process.cwd() + '/data/nike'
+const BASE_DATA_FILE_PATH = process.cwd() + '/scraper/data/nike'
 const BASE_URL = 'https://www.nike.sk'
 const TRACKED_SPORTS = process.env.TRACKED_SPORTS?.split(',')
 const MENU_ELEMENTS_SELECTOR = '[data-atid="sports-filter"] .menu-item'
