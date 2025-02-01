@@ -1,10 +1,11 @@
-// TODO tiposbet, doxxbet, synottip
+// TODO doxxbet, synottip
 
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { scrapeTipsport } from '../scrapers/tipsport.js'
 import { scrapeFortuna } from '../scrapers/fortuna.js'
 import { scrapeNike } from '../scrapers/nike.js'
+import { scrapeTiposbet } from '../scrapers/tiposbet.js'
 
 puppeteer.use(StealthPlugin())
 
@@ -38,6 +39,10 @@ export const scrape = async () => {
 
 		if (enabledScrapers.includes('nike')) {
 			await scrapeNike(browser)
+		}
+
+		if (enabledScrapers.includes('tiposbet')) {
+			await scrapeTiposbet(browser)
 		}
 
 		await browser.close()
