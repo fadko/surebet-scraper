@@ -4,7 +4,7 @@ import { log } from '../helpers/logger.js'
 import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
 const MATCHES_LIMIT = 100
-const BASE_DATA_FILE_PATH = process.cwd() + '/scraper/data/tiposbet'
+const BASE_DATA_FILE_PATH = process.cwd() + '/data/tiposbet'
 const BASE_URL = 'https://tipkurz.etipos.sk'
 const TRACKED_SPORTS = process.env.TRACKED_SPORTS?.split(',')
 const MENU_ELEMENTS_SELECTOR = '[data-test-role="sport-categories"] .nav-item'

@@ -1,6 +1,3 @@
-// TODO scrapers wrapper - performance logging etc
-// TODO v scraperoch zapisovat bets do samostatnych fileov
-
 import 'dotenv/config'
 import { scrape } from './modules/scrape.js'
 import { findSameMatches } from './modules/findSameMatches.js'

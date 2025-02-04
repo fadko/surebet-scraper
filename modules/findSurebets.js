@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
 
-const BASE_DATA_FOLDER_PATH = process.cwd() + '/scraper/data'
+const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
 const getMatchData = (scraperName, sportName, matchId) => {
 	const rawData = fs.readFileSync(
