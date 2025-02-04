@@ -1,5 +1,6 @@
 // TODO doxxbet, synottip
 
+import fs from 'fs'
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { scrapeTipsport } from '../scrapers/tipsport.js'
@@ -36,6 +37,12 @@ export const scrape = async () => {
 		})
 
 		let promises = []
+
+		enabledScrapers.forEach((scraper) => {
+			const dir = process.cwd() + '/data/' + scraper
+			fs.rmSync(dir, { recursive: true, force: true })
+			fs.mkdirSync(dir, { recursive: true })
+		})
 
 		if (enabledScrapers.includes('fortuna')) {
 			promises.push(scrapeFortuna(browser))

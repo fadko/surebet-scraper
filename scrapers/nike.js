@@ -10,8 +10,6 @@ const MENU_ELEMENTS_SELECTOR = '[data-atid="sports-filter"] .menu-item'
 const LEAGUE_GROUP_SELECTOR = '.boxes-inner-view .boxes-view'
 
 const onInit = async (page) => {
-	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
-
 	await setPageRequestInterception(page)
 	await page.setUserAgent(process.env.CUSTOM_UA)
 

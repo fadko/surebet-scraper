@@ -10,8 +10,6 @@ const TRACKED_SPORTS = process.env.TRACKED_SPORTS?.split(',')
 const MENU_ELEMENTS_SELECTOR = '[data-test-role="sport-categories"] .nav-item'
 
 const onInit = async (page) => {
-	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
-
 	await setPageRequestInterception(page)
 	await page.setUserAgent(process.env.CUSTOM_UA)
 

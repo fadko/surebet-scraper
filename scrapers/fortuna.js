@@ -34,9 +34,6 @@ const getTsFromRawDate = (rawDate) => {
 
 export const scrapeFortuna = async (browser) => {
 	const start = performance.now()
-
-	fs.mkdirSync(BASE_DATA_FILE_PATH, { recursive: true })
-
 	const page = await browser.newPage()
 
 	await setPageRequestInterception(page)
