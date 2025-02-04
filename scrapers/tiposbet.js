@@ -35,7 +35,9 @@ const getMenuElementsData = async (page) => {
 				node
 					.querySelector('.nav-tree-label.text-truncate')
 					.textContent?.trim()
-					.toLowerCase() || ''
+					.toLowerCase()
+					.normalize('NFD')
+					.replace(/[\u0300-\u036f]/g, '') || ''
 
 			node.querySelector('a').click()
 

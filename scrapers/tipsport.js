@@ -40,7 +40,14 @@ export const scrapeTipsport = async (browser) => {
 	await page.waitForSelector(MENU_ELEMENTS_SELECTOR)
 
 	const menuNames = await page.$$eval(MENU_ELEMENTS_SELECTOR, (nodes) => {
-		return nodes.map((node) => node.textContent?.toLowerCase() || '')
+		return nodes.map(
+			(node) =>
+				node.textContent
+					?.trim()
+					?.toLowerCase()
+					?.normalize('NFD')
+					?.replace(/[\u0300-\u036f]/g, '') || ''
+		)
 	})
 
 	const menuIndexes = await page.$$eval(
@@ -48,7 +55,13 @@ export const scrapeTipsport = async (browser) => {
 		(nodes, trackedSports) => {
 			return nodes
 				.map((node, index) =>
-					trackedSports.includes(node.textContent?.toLowerCase())
+					trackedSports.includes(
+						node.textContent
+							?.trim()
+							?.toLowerCase()
+							?.normalize('NFD')
+							?.replace(/[\u0300-\u036f]/g, '') || ''
+					)
 						? index
 						: -1
 				)

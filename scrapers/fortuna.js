@@ -59,7 +59,9 @@ export const scrapeFortuna = async (browser) => {
 				node
 					.querySelector('.sport-name')
 					.textContent?.trim()
-					.toLowerCase() || ''
+					.toLowerCase()
+					.normalize('NFD')
+					.replace(/[\u0300-\u036f]/g, '') || ''
 		)
 	})
 
@@ -73,6 +75,8 @@ export const scrapeFortuna = async (browser) => {
 							.querySelector('.sport-name')
 							.textContent?.trim()
 							.toLowerCase()
+							.normalize('NFD')
+							.replace(/[\u0300-\u036f]/g, '') || ''
 					)
 						? index
 						: -1

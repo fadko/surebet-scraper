@@ -31,7 +31,9 @@ const getMenuElementsData = async (page) => {
 				node
 					.querySelector('.menu-item-label')
 					.textContent?.trim()
-					.toLowerCase() || ''
+					.toLowerCase()
+					.normalize('NFD')
+					.replace(/[\u0300-\u036f]/g, '') || ''
 
 			const url = node.querySelector('a').getAttribute('href')
 
