@@ -58,6 +58,10 @@ const scrapeSport = async (menuDataItem, page) => {
 
 	// scroll through sport league groups container
 	while (true) {
+		await new Promise((res) =>
+			setTimeout(res, 1000 + Math.floor(Math.random() * 200))
+		)
+
 		const newHeight = await page.evaluate(() => {
 			const scrollContainer = document.querySelector(
 				'.native-scroll.optimize-scroll'
@@ -69,10 +73,6 @@ const scrapeSport = async (menuDataItem, page) => {
 
 			return scrollContainer?.scrollHeight || 0
 		})
-
-		await new Promise((res) =>
-			setTimeout(res, 1000 + Math.floor(Math.random() * 200))
-		)
 
 		if (newHeight === previousHeight) {
 			break

@@ -163,10 +163,14 @@ export const findSameBets = () => {
 		JSON.stringify(sameBets, null, 3)
 	)
 
+	const durationMs = Math.round(performance.now() - now)
+	const durationString =
+		durationMs > 10000
+			? `${Math.round(durationMs / 1000)} seconds`
+			: `${durationMs}ms`
+
 	log(
-		`...found ${totalFoundBetsCount} same bets (${totalFoundScraperBetsCount} total unique entries) in ${totalFoundMatchesCount} matches in ${Math.round(
-			performance.now() - now
-		)}ms`,
+		`...found ${totalFoundBetsCount} same bets (${totalFoundScraperBetsCount} total unique entries) in ${totalFoundMatchesCount} matches in ${durationString}`,
 		true
 	)
 }
