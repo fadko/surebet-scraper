@@ -165,28 +165,29 @@ const scrapeSport = async (menuDataItem, page) => {
 
 			const bets = await page.evaluate(async (matchName) => {
 				const normalizeOptionName = (name) => {
-					if (name.includes('Pod (')) {
-						return name.replace('Pod (', 'Menej ako ').replace(')', '')
-					}
+					// TODO presunut do same bets
+					// if (name.includes('Pod (')) {
+					// 	return name.replace('Pod (', 'Menej ako ').replace(')', '')
+					// }
 
-					if (name.includes('Nad (')) {
-						return name.replace('Nad (', 'Viac ako ').replace(')', '')
-					}
+					// if (name.includes('Nad (')) {
+					// 	return name.replace('Nad (', 'Viac ako ').replace(')', '')
+					// }
 
-					const splitted = matchName.split(' - ')
+					// const splitted = matchName.split(' - ')
 
-					if (splitted.length === 2) {
-						const team1 = splitted[0]
-						const team2 = splitted[1]
+					// if (splitted.length === 2) {
+					// 	const team1 = splitted[0]
+					// 	const team2 = splitted[1]
 
-						if (name === team1) {
-							return '1'
-						}
+					// 	if (name === team1) {
+					// 		return '1'
+					// 	}
 
-						if (name === team2) {
-							return '2'
-						}
-					}
+					// 	if (name === team2) {
+					// 		return '2'
+					// 	}
+					// }
 
 					return name
 				}

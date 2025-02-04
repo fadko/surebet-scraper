@@ -97,8 +97,8 @@ const scrapeSport = async (menuDataItem, page) => {
 							.querySelector('[data-atid="bet-info-time"]')
 							?.getAttribute('title')
 							?.split('\n')[0]
-							?.split(' | ')[3]
-							?.replace(' vs ', ' - ') || null,
+							?.split(' | ')[3] || null,
+					// ?.replace(' vs ', ' - ') || null, TODO presunut do same matches
 					url: '',
 					startsAtTs:
 						matchRow
