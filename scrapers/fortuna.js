@@ -85,6 +85,8 @@ export const scrapeFortuna = async (browser) => {
 		process.env.TRACKED_SPORTS?.split(',')
 	)
 
+	const foundMatchesCounts = {}
+
 	for (const index of menuIndexes) {
 		// FOR EACH TRACKED SPORT
 		const sportName = menuNames[index]
@@ -375,6 +377,8 @@ export const scrapeFortuna = async (browser) => {
 			}
 		})
 
+		foundMatchesCounts[sportName] = matchesData.length
+
 		await fs.writeFile(
 			`${BASE_DATA_FILE_PATH}/${sportName}.json`,
 			JSON.stringify(matchesData, null, 3),
@@ -385,6 +389,12 @@ export const scrapeFortuna = async (browser) => {
 	log(
 		`...fortuna scraped in ${Math.round(
 			(performance.now() - start) / 1000
-		)} seconds`
+		)} seconds` +
+			Object.keys(foundMatchesCounts)
+				.map(
+					(key) =>
+						`, found ${foundMatchesCounts[key]} matches for '${key}'`
+				)
+				.join('')
 	)
 }

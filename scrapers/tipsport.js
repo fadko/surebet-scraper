@@ -60,6 +60,8 @@ export const scrapeTipsport = async (browser) => {
 		process.env.TRACKED_SPORTS?.split(',')
 	)
 
+	const foundMatchesCounts = {}
+
 	for (const index of menuIndexes) {
 		// FOR EACH TRACKED SPORT
 		const sportName = menuNames[index]
@@ -248,6 +250,8 @@ export const scrapeTipsport = async (browser) => {
 			matchId++
 		}
 
+		foundMatchesCounts[sportName] = matchDates.length
+
 		await fs.writeFile(
 			`${BASE_DATA_FILE_PATH}/${sportName}.json`,
 			JSON.stringify(matchesData, null, 3),
@@ -258,6 +262,12 @@ export const scrapeTipsport = async (browser) => {
 	log(
 		`...tipsport scraped in ${Math.round(
 			(performance.now() - start) / 1000
-		)} seconds`
+		)} seconds` +
+			Object.keys(foundMatchesCounts)
+				.map(
+					(key) =>
+						`, found ${foundMatchesCounts[key]} matches for '${key}'`
+				)
+				.join('')
 	)
 }

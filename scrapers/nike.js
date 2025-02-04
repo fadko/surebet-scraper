@@ -189,6 +189,8 @@ const scrapeSport = async (menuDataItem, page) => {
 		JSON.stringify(matchesData, null, 3),
 		() => {}
 	)
+
+	return matchesData.length
 }
 
 export const scrapeNike = async (browser) => {
@@ -198,13 +200,22 @@ export const scrapeNike = async (browser) => {
 	await onInit(page)
 	const menuData = await getMenuElementsData(page)
 
+	const foundMatchesCounts = {}
+
 	for (const menuDataItem of menuData) {
-		await scrapeSport(menuDataItem, page)
+		const count = await scrapeSport(menuDataItem, page)
+		foundMatchesCounts[menuDataItem.name] = count
 	}
 
 	log(
 		`...nike scraped in ${Math.round(
 			(performance.now() - start) / 1000
-		)} seconds`
+		)} seconds` +
+			Object.keys(foundMatchesCounts)
+				.map(
+					(key) =>
+						`, found ${foundMatchesCounts[key]} matches for '${key}'`
+				)
+				.join('')
 	)
 }
