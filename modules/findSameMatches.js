@@ -3,30 +3,6 @@ import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
-const filterMatchData = (match) => {
-	return match.startsAtTs > Date.now()
-}
-
-const formatMatchesData = (data) => {
-	return data.map((match) => {
-		delete match.bets
-
-		match.nameSplitted = match.name
-			.toLowerCase()
-			.normalize('NFD')
-			.replaceAll('. ', ' ')
-			.replaceAll('.', ' ')
-			.replaceAll(',', '')
-			.replaceAll(' / ', ' ')
-			.replaceAll('/', ' ')
-			.replace(/[\u0300-\u036f]/g, '')
-			.split(' ')
-			.filter((namePart) => namePart.length > 2)
-
-		return match
-	})
-}
-
 const loadData = () => {
 	const trackedSports = process.env.TRACKED_SPORTS?.split(',')
 	const enabledScrapers = process.env.ENABLED_SCRAPERS?.split(',')
@@ -37,16 +13,15 @@ const loadData = () => {
 		result[sportName] = {}
 
 		enabledScrapers?.map((scraperName) => {
-			const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sportName}.json`
+			const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sportName}-normalized.json`
 
 			try {
 				const rawData = fs.readFileSync(filePath, 'utf-8')
 				const data = JSON.parse(rawData)
-				const formattedData = formatMatchesData(data)
-
-				const filteredData = formattedData.filter((match) =>
-					filterMatchData(match)
-				)
+				const filteredData = data.filter((match) => {
+					delete match.bets
+					return match.startsAtTs > Date.now()
+				})
 
 				result[sportName][scraperName] = filteredData
 			} catch (err) {
@@ -62,9 +37,69 @@ const loadData = () => {
 	return result
 }
 
-const findMatches = (data) => {
-	const bannedTeamWords = process.env.BANNED_TEAM_WORDS?.split(',') || []
+const isSameTeam = (name1, name2) => {
+	if (name1 === name2) {
+		return true
+	}
 
+	if (!name1 === !name2) {
+		const name1Splitted = name1.split(' ')
+		const name2Splitted = name2.split(' ')
+		const longestWordsCount = Math.max(
+			name1Splitted.length,
+			name2Splitted.length
+		)
+
+		let foundWordMatchesCount = 0
+
+		name1Splitted.forEach((team1Word) => {
+			name2Splitted.forEach((team2Word) => {
+				if (team1Word === team2Word) {
+					foundWordMatchesCount++
+				}
+			})
+		})
+
+		return foundWordMatchesCount / longestWordsCount > 0.3
+	}
+
+	return false
+}
+
+const haveTeamsSimilarNames = (match1, match2) => {
+	const match1Teams = match1.teamNames
+	const match2Teams = match2.teamNames
+
+	if (match1Teams.length !== match2Teams.length) {
+		return { result: false, oppositeTeams: false }
+	}
+
+	if (match1Teams.length > 2) {
+		return { result: false, oppositeTeams: false }
+	}
+
+	if (match1Teams.length === 1 && isSameTeam(match1Teams[0], match2Teams[0])) {
+		return { result: true, oppositeTeams: false }
+	}
+
+	if (
+		isSameTeam(match1Teams[0], match2Teams[0]) &&
+		isSameTeam(match1Teams[1], match2Teams[1])
+	) {
+		return { result: true, oppositeTeams: false }
+	}
+
+	if (
+		isSameTeam(match1Teams[0], match2Teams[1]) &&
+		isSameTeam(match1Teams[1], match2Teams[0])
+	) {
+		return { result: true, oppositeTeams: true }
+	}
+
+	return { result: false, oppositeTeams: false }
+}
+
+const findMatches = (data) => {
 	let foundMatches = []
 	let totalMatches = 0
 
@@ -99,24 +134,23 @@ const findMatches = (data) => {
 				const currentScraperMatches = data[sport][scraperName]
 
 				currentScraperMatches.forEach((match) => {
-					const hasSimilarName =
-						matchToFind.nameSplitted.filter(
-							(namePart) =>
-								match.nameSplitted.includes(namePart) &&
-								!bannedTeamWords.includes(namePart)
-						).length > 1
+					const haveSimilarNames = haveTeamsSimilarNames(
+						match,
+						matchToFind
+					)
 					const timeDiff = Math.abs(
 						matchToFind.startsAtTs - match.startsAtTs
 					)
 					// one hour
 					const maxTimeDiff = 1 * 60 * 60 * 1000
 
-					if (hasSimilarName && timeDiff <= maxTimeDiff) {
+					if (haveSimilarNames.result && timeDiff <= maxTimeDiff) {
 						if (!foundMatchScrapers.length) {
 							foundMatchScrapers.push({
 								[largestArrayScraperName]: {
 									id: matchToFind.id,
 									name: matchToFind.name,
+									oppositeTeams: false,
 								},
 							})
 						}
@@ -125,6 +159,7 @@ const findMatches = (data) => {
 							[scraperName]: {
 								id: match.id,
 								name: match.name,
+								oppositeTeams: haveSimilarNames.oppositeTeams,
 							},
 						})
 					}
