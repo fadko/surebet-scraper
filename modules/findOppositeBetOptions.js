@@ -13,7 +13,7 @@ const loadSportsData = (sports) => {
 		result[sportName] = {}
 
 		enabledScrapers?.forEach((scraperName) => {
-			const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sportName}.json`
+			const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sportName}-normalized.json`
 			const rawData = fs.readFileSync(filePath, 'utf-8')
 			const data = JSON.parse(rawData)
 
@@ -116,7 +116,7 @@ const formatMatchResultOption = (optionName, matchName, matchName2) => {
 		.toLowerCase()
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
-		.split(' - ')
+		.split(matchName.includes(' vs ') ? ' vs ' : ' - ')
 
 	const team1Name = matchSplitted[hasOppositeTeamOrder ? 1 : 0]
 	const team2Name = matchSplitted[hasOppositeTeamOrder ? 0 : 1]
