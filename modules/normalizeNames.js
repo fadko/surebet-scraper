@@ -147,22 +147,40 @@ export const normalizeNames = () => {
 	const now = performance.now()
 	log('normalizing names...')
 
+	let removedMatches = {}
+
 	const enabledScrapers = process.env.ENABLED_SCRAPERS?.split(',')
 	const trackedSports = process.env.TRACKED_SPORTS?.split(',')
 
 	enabledScrapers?.forEach((scraper) => {
+		removedMatches[scraper] = {}
+
 		const scraperBaseDataPath = BASE_DATA_FOLDER_PATH + '/' + scraper
 
 		trackedSports?.forEach((sport) => {
 			const filePath = scraperBaseDataPath + '/' + sport + '.json'
 			const rawData = fs.readFileSync(filePath, 'utf-8')
 			const matchesData = JSON.parse(rawData)
-			const result = normalizeSportData(matchesData)
+			const result = normalizeSportData(matchesData).filter(
+				(m) => !!m.bets.length
+			)
+
+			removedMatches[scraper][sport] = matchesData.length - result.length
 
 			fs.writeFileSync(
 				`${BASE_DATA_FOLDER_PATH}/${scraper}/${sport}-normalized.json`,
 				JSON.stringify(result, null, 3)
 			)
+		})
+	})
+
+	Object.keys(removedMatches).forEach((scraper) => {
+		Object.keys(removedMatches[scraper]).forEach((sport) => {
+			if (removedMatches[scraper][sport] > 0) {
+				log(
+					`...removed ${removedMatches[scraper][sport]} match(es) with empty bets array from ${scraper} - ${sport}...`
+				)
+			}
 		})
 	})
 
