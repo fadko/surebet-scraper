@@ -3,22 +3,18 @@ import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
-const normalizeAndSplitBetName = (name) => {
-	return name.toLowerCase().normalize('NFD').split(' ')
-}
-
-const loadAndNormalizeBetsData = (match, sport) => {
+const loadBetsData = (match, sport) => {
 	let result = {}
 
 	Object.keys(match).forEach((scraperName) => {
-		const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sport}.json`
+		const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sport}-normalized.json`
 		const rawData = fs.readFileSync(filePath, 'utf-8')
 		const data = JSON.parse(rawData)
 		const betsData = data.find((m) => m.id === match[scraperName].id).bets
 		const normalizedBetsData = betsData.map((bet) => {
 			return {
 				id: bet.id,
-				name: normalizeAndSplitBetName(bet.name),
+				name: bet.nameNormalized,
 				originalName: bet.name,
 			}
 		})
@@ -30,29 +26,38 @@ const loadAndNormalizeBetsData = (match, sport) => {
 }
 
 const checkIsSame = (name1, name2) => {
-	const name1Normalized = name1
-		.join(' ')
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-	const name2Normalized = name2
-		.join(' ')
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
+	if (name1 === name2) {
+		return true
+	}
 
-	const sameNamesGroups = [
-		[
-			'presny pocet setov',
-			'pocet setov',
-			'pocet setov v zápase (na dva vitazne)',
-		],
-		['pocet gemov', 'celkovy pocet gemov'],
-	]
-
-	return sameNamesGroups.some(
-		(namesGroup) =>
-			namesGroup.includes(name1Normalized) &&
-			namesGroup.includes(name2Normalized)
+	const splittedName1 = name1.split(' ')
+	const splittedName2 = name2.split(' ')
+	const longestNameLength = Math.max(
+		splittedName1.length,
+		splittedName2.length
 	)
+
+	let foundNamePartsCount = 0
+
+	splittedName1.forEach((name1Word) => {
+		if (name1Word.length < 2) {
+			return
+		}
+
+		splittedName2.forEach((name2Word) => {
+			if (name2Word.length < 2) {
+				return
+			}
+
+			if (name1Word === name2Word) {
+				foundNamePartsCount++
+			}
+		})
+	})
+
+	const foundWordsRatio = foundNamePartsCount / longestNameLength
+
+	return foundWordsRatio >= 0.8
 }
 
 export const findSameBets = () => {
@@ -69,11 +74,11 @@ export const findSameBets = () => {
 	let totalFoundBetsCount = 0
 	let totalFoundScraperBetsCount = 0
 
-	sameMatches.forEach((match, matchIndex) => {
+	sameMatches.forEach((match) => {
 		const sport = match.sport
 		delete match.sport
 
-		let betsData = loadAndNormalizeBetsData(match, sport)
+		let betsData = loadBetsData(match, sport)
 
 		let largestArrayLength = 0
 		let largestArrayScraperName = ''
@@ -91,7 +96,7 @@ export const findSameBets = () => {
 
 		let bets = []
 
-		largestScraperBets.forEach((betToFind, betIndex) => {
+		largestScraperBets.forEach((betToFind) => {
 			let tempResult = []
 
 			Object.keys(betsData).forEach((scraperName) => {
@@ -102,16 +107,9 @@ export const findSameBets = () => {
 				const currentScraperBets = betsData[scraperName]
 
 				currentScraperBets.forEach((bet) => {
-					// TODO odstranit a presunut vsetko do checkIsSame
-					const hasSimilarName =
-						betToFind.name.filter((namePart) =>
-							bet.name.includes(namePart)
-						).length > Math.min(betToFind.name.length - 1) &&
-						betToFind.name.length === bet.name.length
-
 					const isSame = checkIsSame(betToFind.name, bet.name)
 
-					if (hasSimilarName || isSame) {
+					if (isSame) {
 						if (!tempResult.length) {
 							tempResult.push({
 								[largestArrayScraperName]: {
