@@ -75,28 +75,16 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		betName = '{matchResult}'
 	}
 
-	if ([teamNames[0], '1'].includes(betName.trim())) {
+	if ([teamNames[0]].includes(betName.trim())) {
 		betName = '{team1}'
 	}
 
-	if (teamNames[1] && [teamNames[1], '2'].includes(betName.trim())) {
+	if (teamNames[1] && [teamNames[1]].includes(betName.trim())) {
 		betName = '{team2}'
 	}
 
-	if (['remiza', '0'].includes(betName.trim())) {
+	if (['remiza'].includes(betName.trim())) {
 		betName = '{draw}'
-	}
-
-	if (betName === '10') {
-		betName = '{team1DontLose}'
-	}
-
-	if (betName === '12') {
-		betName = '{willNotBeDraw}'
-	}
-
-	if (betName === '02') {
-		betName = '{team2DontLose}'
 	}
 
 	betName.replace(teamNames[0], '{team1}')
@@ -109,6 +97,7 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		.replaceAll('pocet golov v zapase', '{matchGoalsCount}')
 		.replaceAll('presny vysledok zapasu', '{exactMatchResult}')
 		.replaceAll('celkovy pocet bodov', '{pointsTotal}')
+		.replaceAll('presny pocet setov', '{exactSeetsCount}')
 		.replaceAll('kazdy z timov', '{eachTeam}')
 		.replaceAll('kazdy tim', '{eachTeam}')
 		.replaceAll('presny pocet', '{exactCount}')
@@ -120,6 +109,7 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		.replaceAll('presny vysledok', '{exactResult}')
 		.replaceAll('vysledok', '{result}')
 		.replaceAll('pocet golov', '{goalsCount}')
+		.replaceAll('pocet setov', '{seetsCount}')
 		.replaceAll('stavka bez remizy', '{noDrawBet}')
 		.replaceAll('bez remizy', '{noDrawBet}')
 		.replaceAll('do rozhodnutia', '{untilDecision}')
@@ -127,8 +117,10 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		.replaceAll('da gol', '{scoresGoal}')
 		.replaceAll('sucet bodov', '{pointsTotal}')
 		.replaceAll('v zapase', '{inTheMatch}')
-		.replaceAll('viac ako', '{moreThan}')
-		.replaceAll('menej ako', '{lessThan}')
+		.replaceAll('viac ako', '{over}')
+		.replaceAll('menej ako', '{under}')
+		.replaceAll('vyhra aspon', '{winsAtLeast}')
+		.replaceAll('vyhra presne', '{winsExactly}')
 		.replaceAll('v kadom polcase', '{inEachHalf}')
 		.replaceAll('v kazdom polcase', '{inEachHalf}')
 		.replaceAll('v prvom polcase', '{inFirstHalf}')
@@ -154,26 +146,32 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		.replaceAll('2 polcas', '{2ndHalf}')
 		.replaceAll('1 polcasu', '{1stHalf}')
 		.replaceAll('2 polcasu', '{2ndHalf}')
-		.replaceAll('1 set', '{firstSet}')
-		.replaceAll('1.set', '{firstSet}')
-		.replaceAll('2 set', '{secondSet}')
-		.replaceAll('2.set', '{secondSet}')
-		.replaceAll('3 set', '{thirdSet}')
-		.replaceAll('3.set', '{thirdSet}')
+		.replaceAll('1 setu', '{firstSeet}')
+		.replaceAll('1 set', '{firstSeet}')
+		.replaceAll('1.setu', '{firstSeet}')
+		.replaceAll('1.set', '{firstSeet}')
+		.replaceAll('2 setu', '{secondSeet}')
+		.replaceAll('2 set', '{secondSeet}')
+		.replaceAll('2.setu', '{secondSeet}')
+		.replaceAll('2.set', '{secondSeet}')
+		.replaceAll('3 setu', '{thirdSeet}')
+		.replaceAll('3 set', '{thirdSeet}')
+		.replaceAll('3.setu', '{thirdSeet}')
+		.replaceAll('3.set', '{thirdSeet}')
 		.replaceAll('tim1', '{team1}')
 		.replaceAll('tim 1', '{team1}')
 		.replaceAll('1 tim', '{team1}')
 		.replaceAll('tim2', '{team2}')
 		.replaceAll('tim 2', '{team2}')
 		.replaceAll('2 tim', '{team2}')
-		.replaceAll('setov', '{sets}')
-		.replaceAll('sety', '{sets}')
-		.replaceAll('setu', '{set}')
-		.replaceAll('set', '{set}')
-		.replaceAll('gamov', '{gams}')
-		.replaceAll('gamy', '{gams}')
-		.replaceAll('gamu', '{gam}')
-		.replaceAll('gam', '{gam}')
+		.replaceAll('setov', '{seets}')
+		.replaceAll('setu', '{singleSeet}')
+		.replaceAll('sety', '{seets}')
+		.replaceAll('set', '{singleSeet}')
+		.replaceAll('gamov', '{gaams}')
+		.replaceAll('gamy', '{gaams}')
+		.replaceAll('gamu', '{singleGaam}')
+		.replaceAll('gam', '{singleGaam}')
 		.replaceAll('tretinach', '{thirds}')
 		.replaceAll('tretine', '{third}')
 		.replaceAll('tretinu', '{third}')
@@ -192,7 +190,12 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		.replaceAll('favorit', '{favourite}')
 		.replaceAll('nikto', '{noOne}')
 		.replaceAll('iny', '{other}')
+		.replaceAll('handicap', '{handicap}')
+		.replaceAll('vyhra', '{wins}')
+		.replaceAll('aspon', '{atLeast}')
 		.replaceAll('presny', '{exact}')
+		.replaceAll('zapas', '{match}')
+		.replaceAll('} a {', '} {and} {')
 
 	return betName
 }
@@ -263,8 +266,16 @@ export const normalizeNames = () => {
 
 		trackedSports?.forEach((sport) => {
 			const filePath = scraperBaseDataPath + '/' + sport + '.json'
-			const rawData = fs.readFileSync(filePath, 'utf-8')
-			const matchesData = JSON.parse(rawData)
+
+			let matchesData
+
+			try {
+				const rawData = fs.readFileSync(filePath, 'utf-8')
+				matchesData = JSON.parse(rawData)
+			} catch {
+				return
+			}
+
 			const result = normalizeSportData(matchesData).filter(
 				(m) => !!m.bets.length
 			)

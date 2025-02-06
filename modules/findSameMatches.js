@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
-import { removeTeamsCommonWords } from '../helpers/removeTeamsCommonWords.js'
+// import { removeTeamsCommonWords } from '../helpers/removeTeamsCommonWords.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
@@ -66,7 +66,7 @@ const isSameTeam = (name1, name2) => {
 			})
 		})
 
-		return foundWordMatchesCount / longestWordsCount > 0.3
+		return foundWordMatchesCount / longestWordsCount > 0.5
 	}
 
 	return false
