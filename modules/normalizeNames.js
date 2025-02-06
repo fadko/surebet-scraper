@@ -3,8 +3,6 @@ import { log } from '../helpers/logger.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
-const teamNamesLabels = ['ž', 'u18', 'u20', 'jun']
-
 const getTeamNames = (matchName) => {
 	const lowerCased = matchName.toLowerCase()
 	let charsReplaced = lowerCased
@@ -18,28 +16,9 @@ const getTeamNames = (matchName) => {
 
 	const splitted = charsReplaced.replace(' vs ', ' - ').split(' - ')
 
-	let teamLabels = []
-
-	teamNamesLabels.forEach((label) => {
-		if (
-			splitted.every((team) =>
-				team.normalize('NFD').split(' ').includes(label.normalize('NFD'))
-			)
-		) {
-			teamLabels.push(label)
-		}
-	})
-
 	const teamNames = splitted.map((team) => {
-		team = team.normalize('NFD')
-
-		teamNamesLabels.forEach((l) => {
-			if (team.includes(l.normalize('NFD'))) {
-				team = team.replace(l.normalize('NFD'), '')
-			}
-		})
-
 		team = team
+			.normalize('NFD')
 			.replace(/[\u0300-\u036f]/g, '')
 			.replace(/[^\p{L}\p{N}]/gu, ' ')
 			.trim()
@@ -51,9 +30,22 @@ const getTeamNames = (matchName) => {
 		return team
 	})
 
+	if (teamNames.length === 2) {
+		const team1Splitted = teamNames[0].split(' ')
+		const team2Splitted = teamNames[1].split(' ')
+		const commonWords = new Set(
+			team1Splitted.filter((word) => team2Splitted.includes(word))
+		)
+		teamNames[0] = team1Splitted
+			.filter((word) => !commonWords.has(word))
+			.join(' ')
+		teamNames[1] = team2Splitted
+			.filter((word) => !commonWords.has(word))
+			.join(' ')
+	}
+
 	const result = {
 		teamNames,
-		teamLabels,
 	}
 
 	return result
@@ -66,14 +58,6 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		.replace(/(?<!\d)\.(?!\d)/g, ' ')
 		.replaceAll('  ', ' ')
 		.normalize('NFD')
-
-	teamNamesLabels.forEach((l) => {
-		if (betName.includes(l.normalize('NFD'))) {
-			betName = betName.replaceAll(l.normalize('NFD'), '')
-		}
-	})
-
-	betName = betName
 		.replace(/[\u0300-\u036f]/g, '')
 		.replace(
 			isOption
