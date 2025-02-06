@@ -1,5 +1,6 @@
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
+import { removeTeamsCommonWords } from '../helpers/removeTeamsCommonWords.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
@@ -43,8 +44,12 @@ const isSameTeam = (name1, name2) => {
 	}
 
 	if (!name1 === !name2) {
-		const name1Splitted = name1.split(' ')
-		const name2Splitted = name2.split(' ')
+		const [filteredTeam1Name, filteredTeam2Name] = removeTeamsCommonWords(
+			name1,
+			name2
+		)
+		const name1Splitted = filteredTeam1Name.split(' ')
+		const name2Splitted = filteredTeam2Name.split(' ')
 		const longestWordsCount = Math.max(
 			name1Splitted.length,
 			name2Splitted.length
@@ -60,7 +65,7 @@ const isSameTeam = (name1, name2) => {
 			})
 		})
 
-		return foundWordMatchesCount / longestWordsCount > 0.3
+		return foundWordMatchesCount / longestWordsCount > 0.5
 	}
 
 	return false

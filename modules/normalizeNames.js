@@ -1,5 +1,6 @@
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
+import { removeTeamsCommonWords } from '../helpers/removeTeamsCommonWords.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
@@ -31,17 +32,12 @@ const getTeamNames = (matchName) => {
 	})
 
 	if (teamNames.length === 2) {
-		const team1Splitted = teamNames[0].split(' ')
-		const team2Splitted = teamNames[1].split(' ')
-		const commonWords = new Set(
-			team1Splitted.filter((word) => team2Splitted.includes(word))
+		const [filteredTeam1Name, filteredTeam2Name] = removeTeamsCommonWords(
+			teamNames[0],
+			teamNames[1]
 		)
-		teamNames[0] = team1Splitted
-			.filter((word) => !commonWords.has(word))
-			.join(' ')
-		teamNames[1] = team2Splitted
-			.filter((word) => !commonWords.has(word))
-			.join(' ')
+		teamNames[0] = filteredTeam1Name
+		teamNames[1] = filteredTeam2Name
 	}
 
 	const result = {
