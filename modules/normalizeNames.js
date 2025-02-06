@@ -71,36 +71,82 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		betName = betName.replaceAll(teamName, `{team${index + 1}}`)
 	})
 
-	if (betName === 'zapas') {
+	if (['zapas', 'vitaz'].includes(betName.trim())) {
 		betName = '{matchResult}'
 	}
 
+	if ([teamNames[0], '1'].includes(betName.trim())) {
+		betName = '{team1}'
+	}
+
+	if (teamNames[1] && [teamNames[1], '2'].includes(betName.trim())) {
+		betName = '{team2}'
+	}
+
+	if (['remiza', '0'].includes(betName.trim())) {
+		betName = '{draw}'
+	}
+
+	if (betName === '10') {
+		betName = '{team1DontLose}'
+	}
+
+	if (betName === '12') {
+		betName = '{willNotBeDraw}'
+	}
+
+	if (betName === '02') {
+		betName = '{team2DontLose}'
+	}
+
+	betName.replace(teamNames[0], '{team1}')
+
+	if (teamNames.length === 2) {
+		betName.replace(teamNames[1], '{team2}')
+	}
+
 	betName = betName
+		.replaceAll('pocet golov v zapase', '{matchGoalsCount}')
+		.replaceAll('presny vysledok zapasu', '{exactMatchResult}')
+		.replaceAll('celkovy pocet bodov', '{pointsTotal}')
+		.replaceAll('kazdy z timov', '{eachTeam}')
+		.replaceAll('kazdy tim', '{eachTeam}')
+		.replaceAll('presny pocet', '{exactCount}')
+		.replaceAll('pocet bodov', '{pointsCount}')
+		.replaceAll('body handicap', '{handicapPoints}')
+		.replaceAll('celkovy pocet golov', '{matchGoalsCount}')
 		.replaceAll('vysledok zapasu', '{matchResult}')
+		.replaceAll('vitaz zapasu', '{matchResult}')
 		.replaceAll('presny vysledok', '{exactResult}')
 		.replaceAll('vysledok', '{result}')
-		.replaceAll('pocet golov v zapase', '{matchGoalsCount}')
-		.replaceAll('celkovy pocet golov', '{matchGoalsCount}')
 		.replaceAll('pocet golov', '{goalsCount}')
 		.replaceAll('stavka bez remizy', '{noDrawBet}')
 		.replaceAll('bez remizy', '{noDrawBet}')
 		.replaceAll('do rozhodnutia', '{untilDecision}')
+		.replaceAll('vratane predlzenia', '{untilDecision}')
 		.replaceAll('da gol', '{scoresGoal}')
-		.replaceAll('v kadej tretine', '{inEachThird}')
-		.replaceAll('v kazdej tretine', '{inEachThird}')
+		.replaceAll('sucet bodov', '{pointsTotal}')
+		.replaceAll('v zapase', '{inTheMatch}')
+		.replaceAll('viac ako', '{moreThan}')
+		.replaceAll('menej ako', '{lessThan}')
 		.replaceAll('v kadom polcase', '{inEachHalf}')
 		.replaceAll('v kazdom polcase', '{inEachHalf}')
-		.replaceAll('v zapase', '{inTheMatch}')
-		.replaceAll('dvojtip', '{doubleBet}')
-		.replaceAll('tim1', '{team1}')
-		.replaceAll('tim 1', '{team1}')
-		.replaceAll('1 tim', '{team1}')
-		.replaceAll('tim2', '{team2}')
-		.replaceAll('tim 2', '{team2}')
-		.replaceAll('2 tim', '{team2}')
+		.replaceAll('v prvom polcase', '{inFirstHalf}')
+		.replaceAll('v druhom polcase', '{inSecondHalf}')
+		.replaceAll('v prvej tretine', '{inFirstThird}')
+		.replaceAll('v druhej tretine', '{inSecondThird}')
+		.replaceAll('v tretej tretine', '{inThirdThird}')
+		.replaceAll('v kazdej tretine', '{inEachThird}')
+		.replaceAll('v kadej tretine', '{inEachThird}')
+		.replaceAll('v kazdej tretine', '{inEachThird}')
+		.replaceAll('v kadej stvrtine', '{inEachQuarter}')
+		.replaceAll('v kazdej stvrtine', '{inEachQuarter}')
 		.replaceAll('1 tretina', '{1stThird}')
+		.replaceAll('1 tretine', '{1stThird}')
 		.replaceAll('2 tretina', '{2ndThird}')
+		.replaceAll('2 tretine', '{2ndThird}')
 		.replaceAll('3 tretina', '{3rdThird}')
+		.replaceAll('3 tretine', '{3rdThird}')
 		.replaceAll('1 tretiny', '{1stThird}')
 		.replaceAll('2 tretiny', '{2ndThird}')
 		.replaceAll('3 tretiny', '{3rdThird}')
@@ -108,8 +154,45 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		.replaceAll('2 polcas', '{2ndHalf}')
 		.replaceAll('1 polcasu', '{1stHalf}')
 		.replaceAll('2 polcasu', '{2ndHalf}')
+		.replaceAll('1 set', '{firstSet}')
+		.replaceAll('1.set', '{firstSet}')
+		.replaceAll('2 set', '{secondSet}')
+		.replaceAll('2.set', '{secondSet}')
+		.replaceAll('3 set', '{thirdSet}')
+		.replaceAll('3.set', '{thirdSet}')
+		.replaceAll('tim1', '{team1}')
+		.replaceAll('tim 1', '{team1}')
+		.replaceAll('1 tim', '{team1}')
+		.replaceAll('tim2', '{team2}')
+		.replaceAll('tim 2', '{team2}')
+		.replaceAll('2 tim', '{team2}')
+		.replaceAll('setov', '{sets}')
+		.replaceAll('sety', '{sets}')
+		.replaceAll('setu', '{set}')
+		.replaceAll('set', '{set}')
+		.replaceAll('gamov', '{gams}')
+		.replaceAll('gamy', '{gams}')
+		.replaceAll('gamu', '{gam}')
+		.replaceAll('gam', '{gam}')
+		.replaceAll('tretinach', '{thirds}')
+		.replaceAll('tretine', '{third}')
+		.replaceAll('tretinu', '{third}')
+		.replaceAll('tretina', '{third}')
+		.replaceAll('dvojtip', '{doubleBet}')
+		.replaceAll('remiza', '{draw}')
+		.replaceAll('nepar', '{odd}')
+		.replaceAll('par', '{even}')
+		.replaceAll('ano', '{yes}')
+		.replaceAll('nie', '{no}')
+		.replaceAll('nad', '{over}')
+		.replaceAll('pod', '{under}')
 		.replaceAll('alebo', '{or}')
-		.replaceAll(' a ', ' {and} ')
+		.replaceAll('vitaz', '{winner}')
+		.replaceAll('rovnako', '{same}')
+		.replaceAll('favorit', '{favourite}')
+		.replaceAll('nikto', '{noOne}')
+		.replaceAll('iny', '{other}')
+		.replaceAll('presny', '{exact}')
 
 	return betName
 }
