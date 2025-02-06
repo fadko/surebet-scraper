@@ -91,6 +91,10 @@ const normalizeBetName = (betName, teamNames, isOption = false) => {
 		betName = betName.replaceAll(teamName, `{team${index + 1}}`)
 	})
 
+	if (betName === 'zapas') {
+		betName = '{matchResult}'
+	}
+
 	betName = betName
 		.replaceAll('vysledok zapasu', '{matchResult}')
 		.replaceAll('presny vysledok', '{exactResult}')
@@ -146,6 +150,10 @@ const normalizeBetOptions = (options, teamNames) => {
 const normalizeBets = (bets, teamNames) => {
 	const result = []
 
+	if (!bets) {
+		return null
+	}
+
 	bets.forEach((bet) => {
 		result.push({
 			...bet,
@@ -162,12 +170,15 @@ const normalizeSportData = (matches) => {
 
 	matches.forEach((match) => {
 		const teamNames = getTeamNames(match.name)
+		const normalizedBets = normalizeBets(match.bets, teamNames.teamNames)
 
-		result.push({
-			...match,
-			...teamNames,
-			bets: normalizeBets(match.bets, teamNames.teamNames),
-		})
+		if (normalizedBets) {
+			result.push({
+				...match,
+				...teamNames,
+				bets: normalizedBets,
+			})
+		}
 	})
 
 	return result

@@ -23,19 +23,6 @@ export const scrape = async () => {
 	const enabledScrapers = process.env.ENABLED_SCRAPERS?.split(',')
 
 	if (enabledScrapers?.length) {
-		const browser = await puppeteer.launch({
-			devtools: false,
-			headless: process.env.HEADLESS_BROWSER === 'true',
-			args: [
-				'--window-size=1512,908',
-				'--disable-blink-features=AutomationControlled',
-			],
-			defaultViewport: {
-				width: 1512,
-				height: 773,
-			},
-		})
-
 		let promises = []
 
 		enabledScrapers.forEach((scraper) => {
@@ -45,25 +32,22 @@ export const scrape = async () => {
 		})
 
 		if (enabledScrapers.includes('fortuna')) {
-			promises.push(scrapeFortuna(browser))
+			promises.push(scrapeFortuna())
 		}
 
 		if (enabledScrapers.includes('nike')) {
-			promises.push(scrapeNike(browser))
+			promises.push(scrapeNike())
 		}
 
 		if (enabledScrapers.includes('tiposbet')) {
-			promises.push(scrapeTiposbet(browser))
+			promises.push(scrapeTiposbet())
 		}
 
-		// needs to be last in promises array!
 		if (enabledScrapers.includes('tipsport')) {
-			promises.push(scrapeTipsport(browser))
+			promises.push(scrapeTipsport())
 		}
 
 		await Promise.all(promises)
-
-		await browser.close()
 	}
 
 	log(

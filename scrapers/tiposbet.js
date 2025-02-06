@@ -1,5 +1,6 @@
-import { DateTime } from 'luxon'
+import { initBrowser } from '../helpers/initBrowser.js'
 import fs from 'fs'
+import { DateTime } from 'luxon'
 import { log } from '../helpers/logger.js'
 import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
@@ -258,9 +259,10 @@ const scrapeSport = async (menuDataItem, page) => {
 	return matchesData.length
 }
 
-export const scrapeTiposbet = async (browser) => {
+export const scrapeTiposbet = async () => {
 	const start = performance.now()
 
+	const browser = await initBrowser()
 	const page = await browser.newPage()
 	await onInit(page)
 	const menuData = await getMenuElementsData(page)
@@ -271,6 +273,8 @@ export const scrapeTiposbet = async (browser) => {
 		const count = await scrapeSport(menuDataItem, page)
 		foundMatchesCounts[menuDataItem.name] = count
 	}
+
+	await browser.close()
 
 	log(
 		`...tiposbet scraped in ${Math.round(

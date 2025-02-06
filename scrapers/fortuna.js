@@ -1,5 +1,6 @@
-import { DateTime } from 'luxon'
 import fs from 'fs'
+import { initBrowser } from '../helpers/initBrowser.js'
+import { DateTime } from 'luxon'
 import { log } from '../helpers/logger.js'
 import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
@@ -32,13 +33,15 @@ const getTsFromRawDate = (rawDate) => {
 	return date.toMillis()
 }
 
-export const scrapeFortuna = async (browser) => {
+export const scrapeFortuna = async () => {
 	const start = performance.now()
+
+	const browser = await initBrowser()
 	const page = await browser.newPage()
 
 	await setPageRequestInterception(page)
 
-	await page.setUserAgent(process.env.CUSTOM_UA)
+	await page.setUserAgent(process.env.CUSTOM_UA || '')
 
 	await page.goto('https://www.ifortuna.sk/', {
 		waitUntil: 'networkidle2',
@@ -56,6 +59,7 @@ export const scrapeFortuna = async (browser) => {
 	const menuNames = await page.$$eval(MENU_ELEMENTS_SELECTOR, (nodes) => {
 		return nodes.map(
 			(node) =>
+				// @ts-ignore
 				node
 					.querySelector('.sport-name')
 					.textContent?.trim()
@@ -70,7 +74,8 @@ export const scrapeFortuna = async (browser) => {
 		(nodes, trackedSports) => {
 			return nodes
 				.map((node, index) =>
-					trackedSports.includes(
+					trackedSports?.includes(
+						// @ts-ignore
 						node
 							.querySelector('.sport-name')
 							.textContent?.trim()
@@ -97,6 +102,7 @@ export const scrapeFortuna = async (browser) => {
 				const element = document.querySelectorAll(selector)[i]
 
 				if (element) {
+					// @ts-ignore
 					element.click()
 				}
 			},
@@ -386,6 +392,8 @@ export const scrapeFortuna = async (browser) => {
 			() => {}
 		)
 	}
+
+	await browser.close()
 
 	log(
 		`...fortuna scraped in ${Math.round(

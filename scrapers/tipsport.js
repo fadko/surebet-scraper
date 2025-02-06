@@ -1,7 +1,8 @@
 // TODO zamknute stavky
 
-import { DateTime } from 'luxon'
 import fs from 'fs'
+import { initBrowser } from '../helpers/initBrowser.js'
+import { DateTime } from 'luxon'
 import { log } from '../helpers/logger.js'
 import { setPageRequestInterception } from '../helpers/setPageRequestInterception.js'
 
@@ -24,12 +25,14 @@ const getTsFromRawDate = (rawDate) => {
 	return date.toMillis()
 }
 
-export const scrapeTipsport = async (browser) => {
+export const scrapeTipsport = async () => {
 	const start = performance.now()
+
+	const browser = await initBrowser()
 	const page = await browser.newPage()
 
 	await setPageRequestInterception(page)
-	await page.setUserAgent(process.env.CUSTOM_UA)
+	await page.setUserAgent(process.env.CUSTOM_UA || '')
 
 	await page.emulateTimezone('Europe/Bratislava')
 
@@ -55,7 +58,7 @@ export const scrapeTipsport = async (browser) => {
 		(nodes, trackedSports) => {
 			return nodes
 				.map((node, index) =>
-					trackedSports.includes(
+					trackedSports?.includes(
 						node.textContent
 							?.trim()
 							?.toLowerCase()
@@ -82,6 +85,7 @@ export const scrapeTipsport = async (browser) => {
 				const element = document.querySelectorAll(selector)[i]
 
 				if (element) {
+					// @ts-ignore
 					element.click()
 				}
 			},
@@ -176,6 +180,7 @@ export const scrapeTipsport = async (browser) => {
 					const element = document.querySelectorAll(selector)[matchIndex]
 
 					if (element) {
+						// @ts-ignore
 						element.click()
 					}
 				},
@@ -207,9 +212,9 @@ export const scrapeTipsport = async (browser) => {
 
 			const betsGroups = await page.$$eval(BETS_SELECTOR, (elements) =>
 				elements.map((groupEl, groupIndex) => {
-					const name = groupEl.querySelector(
-						'[class^="SubHeaderstyled__SubHeader"]'
-					).textContent
+					const name =
+						groupEl.querySelector('[class^="SubHeaderstyled__SubHeader"]')
+							?.textContent || ''
 
 					const gameNames = Array.from(
 						groupEl.querySelectorAll(
@@ -268,6 +273,8 @@ export const scrapeTipsport = async (browser) => {
 			() => {}
 		)
 	}
+
+	await browser.close()
 
 	log(
 		`...tipsport scraped in ${Math.round(
