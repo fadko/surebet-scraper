@@ -14,8 +14,14 @@ const loadSportsData = (sports) => {
 
 		enabledScrapers?.forEach((scraperName) => {
 			const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sportName}-normalized.json`
-			const rawData = fs.readFileSync(filePath, 'utf-8')
-			const data = JSON.parse(rawData)
+			let data
+
+			try {
+				const rawData = fs.readFileSync(filePath, 'utf-8')
+				data = JSON.parse(rawData)
+			} catch {
+				return
+			}
 
 			result[sportName][scraperName] = data
 		})
@@ -24,146 +30,94 @@ const loadSportsData = (sports) => {
 	return result
 }
 
-const formatMatchResultOption = (optionName, matchName, matchName2) => {
-	const bannedTeamWords = process.env.BANNED_TEAM_WORDS?.split(',') || []
-	let hasOppositeTeamOrder = false
+const oppositeOptionsMap = [['{no}', '{yes}']]
 
-	if (matchName2?.length) {
-		const normalizeMatchName = (rawName) => {
-			return rawName
-				.toLowerCase()
-				.normalize('NFD')
-				.replace(/[\u0300-\u036f]/g, '')
-				.split(' - ')
-				.map((teamNameArr) =>
-					teamNameArr
-						.split(' ')
-						.filter(
-							(word) =>
-								word.length > 1 && !bannedTeamWords.includes(word)
-						)
-						.join()
-						.replaceAll(',', ' ')
-						.replaceAll('.', '')
-						.replaceAll('  ', ' ')
-				)
-		}
+const drawSportsBasicMap = [
+	['1', 'x2'],
+	['1', '02'],
+	['{team1}', 'x2'],
+	['{team1}', '02'],
+	['2', '1x'],
+	['2', '10'],
+	['{team2}', '1x'],
+	['{team2}', '10'],
+]
 
-		const matchName1Normalized = normalizeMatchName(matchName)
-		const matchName2Normalized = normalizeMatchName(matchName2)
+const noDrawSportsBasicMap = [
+	['1', '2'],
+	['{team1}', '{team2}'],
+	['1', '{team2}'],
+	['2', '{team1}'],
+]
 
-		hasOppositeTeamOrder =
-			matchName1Normalized.join(' ') ===
-			matchName2Normalized.reverse().join(' ')
-	}
+const sportSpecificOptionsMap = {
+	// sports with draw
+	hokej: [...drawSportsBasicMap],
+	futbal: [...drawSportsBasicMap],
+	basketbal: [...drawSportsBasicMap],
+	hadzana: [...drawSportsBasicMap],
+	florbal: [...drawSportsBasicMap],
+	rugby: [...drawSportsBasicMap],
+	lakros: [...drawSportsBasicMap],
+	'americky futbal': [...drawSportsBasicMap],
+	// sports with no draw
+	tenis: [...noDrawSportsBasicMap, ['2', '3']],
+	box: [...noDrawSportsBasicMap],
+	squash: [...noDrawSportsBasicMap],
+	sipky: [...noDrawSportsBasicMap],
+	'stolny tenis': [...noDrawSportsBasicMap],
+}
 
-	if (['0', '1', '2', '10', '1X', '02', 'X2'].includes(optionName)) {
-		if (!hasOppositeTeamOrder || optionName === '0') {
-			return optionName
-		} else {
-			const opposite = {
-				1: '2',
-				2: '1',
-				10: '02',
-				'1X': '02',
-				'02': '10',
-				X2: '10',
-			}[optionName]
-
-			return opposite
-		}
-	}
-
-	// nazov timu namiesto 1 alebo 2
+const foundInOptionsMap = (name1, name2, sport, betName) => {
 	if (
-		matchName.includes(' - ') &&
-		matchName.split(' - ')?.includes(optionName)
+		oppositeOptionsMap.some((options) => {
+			return (
+				(options[0] === name1 && options[1] === name2) ||
+				(options[0] === name2 && options[1] === name1)
+			)
+		})
 	) {
-		const index = matchName.split(' - ').indexOf(optionName)
-		let result = ''
+		return true
+	}
 
-		if (!hasOppositeTeamOrder) {
-			if (index === 0) {
-				result = '1'
-			} else if (index === 1) {
-				result = '2'
+	if (
+		sport in sportSpecificOptionsMap &&
+		sportSpecificOptionsMap[sport].some((options) => {
+			return (
+				(options[0] === name1 && options[1] === name2) ||
+				(options[0] === name2 && options[1] === name1)
+			)
+		})
+	) {
+		return true
+	}
+
+	const name1Splitted = name1.split(' ')
+	const name2Splitted = name2.split(' ')
+
+	if (name1Splitted.length === 2 && name2Splitted.length === 2) {
+		if (name1Splitted[0] === name2Splitted[0]) {
+			return false
+		}
+
+		if (name1Splitted[1] === name2Splitted[1]) {
+			if (
+				(name1Splitted[0] === '{over}' && name2Splitted[0] === '{under}') ||
+				(name1Splitted[0] === '{under}' && name2Splitted[0] === '{over}')
+			) {
+				return true
 			}
 		} else {
-			if (index === 0) {
-				result = '2'
-			} else if (index === 1) {
-				result = '1'
-			}
+			return false
 		}
-
-		return result
 	}
 
-	if (optionName.toLowerCase() === 'remíza') {
-		return '0'
-	}
+	// console.log(betName)
+	// console.log(name1)
+	// console.log(name2)
+	// console.log('\n')
 
-	if (optionName.toLowerCase() === 'nebude remíza') {
-		return '12'
-	}
-
-	const optionNameSplitted = optionName
-		.toLowerCase()
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.split(' ')
-	const matchSplitted = matchName
-		.toLowerCase()
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.split(matchName.includes(' vs ') ? ' vs ' : ' - ')
-
-	const team1Name = matchSplitted[hasOppositeTeamOrder ? 1 : 0]
-	const team2Name = matchSplitted[hasOppositeTeamOrder ? 0 : 1]
-
-	const team1NamePartsFound = team1Name
-		.split(' ')
-		.filter(
-			(namePart) =>
-				namePart.length > 1 && !bannedTeamWords.includes(namePart)
-		)
-		.map((namePart) => optionNameSplitted.includes(namePart))
-		.filter((b) => b === true).length
-	const team2NamePartsFound = team2Name
-		.split(' ')
-		.filter(
-			(namePart) =>
-				namePart.length > 1 && !bannedTeamWords.includes(namePart)
-		)
-		.map((namePart) => optionNameSplitted.includes(namePart))
-		.filter((b) => b === true).length
-
-	const team1Found =
-		!!team1NamePartsFound && team1NamePartsFound > team2NamePartsFound
-	const team2Found =
-		!!team2NamePartsFound && team2NamePartsFound > team1NamePartsFound
-
-	if (optionNameSplitted.includes('neprehra')) {
-		if (team1Found) {
-			return '10'
-		}
-
-		if (team2Found) {
-			return '02'
-		}
-
-		return null
-	}
-
-	if (team1Found) {
-		return '1'
-	}
-
-	if (team2Found) {
-		return '2'
-	}
-
-	return null
+	return false
 }
 
 const isOppositeOption = (
@@ -172,44 +126,30 @@ const isOppositeOption = (
 	matchName1,
 	matchName2,
 	betName,
-	is1or2
+	betNameNormalized,
+	sportName
 ) => {
-	if (option1.name === option2.name) {
+	const optionName1Normalized = option1.nameNormalized
+	const optionName2Normalized = option2.nameNormalized
+
+	if (optionName1Normalized === optionName2Normalized) {
 		return false
 	}
 
 	if (
-		['výsledok zápasu', 'zápas', 'víťaz zápasu'].includes(
-			betName.toLowerCase()
+		foundInOptionsMap(
+			optionName1Normalized,
+			optionName2Normalized,
+			sportName,
+			betName
 		)
-	) {
-		const formatted1 = formatMatchResultOption(option1.name, matchName1)
-		const formatted2 = formatMatchResultOption(
-			option2.name,
-			matchName2,
-			matchName1
-		)
-		let isOpposite
-
-		if (is1or2) {
-			isOpposite = formatted1 === '1' && formatted2 === '2'
-		} else {
-			isOpposite =
-				(formatted1 === '1' && formatted2 === '02') ||
-				(formatted1 === '10' && formatted2 === '2')
-		}
-
-		return isOpposite
-	}
-
-	if (
-		option1.name.toLowerCase().replace('menej ako', 'viac ako') ===
-			option2.name.toLowerCase() &&
-		option1.name.toLowerCase() !== option2.name.toLowerCase()
 	) {
 		return true
 	}
 
+	// console.log(betName)
+	// console.log(option1.name + ' | ' + option2.name)
+	// console.log('\n')
 	return false
 }
 
@@ -282,10 +222,6 @@ export const findOppositeBetOptions = () => {
 							// 	console.log(o.value, optionToFind.value)
 							// }
 
-							const is1or2 =
-								currentMatchBet.options.length === 2 &&
-								matchBet.options.length === 2
-
 							if (
 								isOppositeOption(
 									o,
@@ -293,7 +229,8 @@ export const findOppositeBetOptions = () => {
 									currentScraperMatch.name,
 									match.name,
 									currentMatchBet.name,
-									is1or2
+									currentMatchBet.nameNormalized,
+									sportName
 								)
 							) {
 								totalFoundBetOptionsCount++
