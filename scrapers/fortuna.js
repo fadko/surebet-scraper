@@ -35,203 +35,296 @@ const getTsFromRawDate = (rawDate) => {
 
 export const scrapeFortuna = async () => {
 	const start = performance.now()
-
-	const browser = await initBrowser()
-	const page = await browser.newPage()
-
-	await setPageRequestInterception(page)
-
-	await page.setUserAgent(process.env.CUSTOM_UA || '')
-
-	await page.goto('https://www.ifortuna.sk/', {
-		waitUntil: 'networkidle2',
-	})
-
-	await page.waitForSelector(MENU_ELEMENTS_SELECTOR)
-
-	// page.evaluate(() => {
-	// 	if (document.querySelector('#cookie-consent-button-accept')) {
-	// 		// @ts-ignore
-	// 		document.querySelector('#cookie-consent-button-accept').click()
-	// 	}
-	// })
-
-	const menuNames = await page.$$eval(MENU_ELEMENTS_SELECTOR, (nodes) => {
-		return nodes.map(
-			(node) =>
-				// @ts-ignore
-				node
-					.querySelector('.sport-name')
-					.textContent?.trim()
-					.toLowerCase()
-					.normalize('NFD')
-					.replace(/[\u0300-\u036f]/g, '') || ''
-		)
-	})
-
-	const menuIndexes = await page.$$eval(
-		MENU_ELEMENTS_SELECTOR,
-		(nodes, trackedSports) => {
-			return nodes
-				.map((node, index) =>
-					trackedSports?.includes(
-						// @ts-ignore
-						node
-							.querySelector('.sport-name')
-							.textContent?.trim()
-							.toLowerCase()
-							.normalize('NFD')
-							.replace(/[\u0300-\u036f]/g, '') || ''
-					)
-						? index
-						: -1
-				)
-				.filter((index) => index !== -1)
-		},
-		process.env.TRACKED_SPORTS?.split(',')
-	)
-
 	const foundMatchesCounts = {}
+	const browser = await initBrowser()
 
-	for (const index of menuIndexes) {
-		// FOR EACH TRACKED SPORT
-		const sportName = menuNames[index]
+	try {
+		const page = await browser.newPage()
 
-		await page.evaluate(
-			(selector, i) => {
-				const element = document.querySelectorAll(selector)[i]
+		await setPageRequestInterception(page)
 
-				if (element) {
+		await page.setUserAgent(process.env.CUSTOM_UA || '')
+
+		await page.goto('https://www.ifortuna.sk/', {
+			waitUntil: 'networkidle2',
+		})
+
+		await page.waitForSelector(MENU_ELEMENTS_SELECTOR)
+
+		const menuNames = await page.$$eval(MENU_ELEMENTS_SELECTOR, (nodes) => {
+			return nodes.map(
+				(node) =>
 					// @ts-ignore
-					element.click()
-				}
-			},
-			MENU_ELEMENTS_SELECTOR,
-			index
-		)
-
-		await page.waitForNetworkIdle()
-
-		await page.$$('section.competition-box')
-
-		await page.evaluate(() => {
-			window.scrollTo(
-				0,
-				document.body.scrollHeight -
-					// @ts-ignore
-					document.querySelector('#footer')?.offsetHeight || 0
+					node
+						.querySelector('.sport-name')
+						.textContent?.trim()
+						.toLowerCase()
+						.normalize('NFD')
+						.replace(/[\u0300-\u036f]/g, '') || ''
 			)
 		})
 
-		await page.waitForNetworkIdle()
-
-		await page.evaluate(() => {
-			document
-				.querySelectorAll('section.competition-box')
-				.forEach((sectionEl) => {
-					const expandButton = sectionEl.querySelector(
-						'a.name[title="Všetko"]'
+		const menuIndexes = await page.$$eval(
+			MENU_ELEMENTS_SELECTOR,
+			(nodes, trackedSports) => {
+				return nodes
+					.map((node, index) =>
+						trackedSports?.includes(
+							// @ts-ignore
+							node
+								.querySelector('.sport-name')
+								.textContent?.trim()
+								.toLowerCase()
+								.normalize('NFD')
+								.replace(/[\u0300-\u036f]/g, '') || ''
+						)
+							? index
+							: -1
 					)
+					.filter((index) => index !== -1)
+			},
+			process.env.TRACKED_SPORTS?.split(',')
+		)
 
-					if (expandButton) {
+		for (const index of menuIndexes) {
+			// FOR EACH TRACKED SPORT
+			const sportName = menuNames[index]
+
+			await page.evaluate(
+				(selector, i) => {
+					const element = document.querySelectorAll(selector)[i]
+
+					if (element) {
 						// @ts-ignore
-						expandButton?.click()
+						element.click()
 					}
-				})
-		})
+				},
+				MENU_ELEMENTS_SELECTOR,
+				index
+			)
 
-		await page.waitForNetworkIdle()
+			await page.waitForNetworkIdle()
 
-		let matchesData = await page.evaluate(() => {
-			const data = []
-			let matchId = 1
+			await page.$$('section.competition-box')
 
-			document
-				.querySelectorAll('section.competition-box')
-				.forEach((sectionEl) => {
-					const expandButton = sectionEl.querySelector(
-						'a.name[title="Všetko"]'
-					)
+			await page.evaluate(() => {
+				window.scrollTo(
+					0,
+					document.body.scrollHeight -
+						// @ts-ignore
+						document.querySelector('#footer')?.offsetHeight || 0
+				)
+			})
 
-					if (expandButton) {
-						const mainEventsColNames = Array.from(
-							sectionEl.querySelectorAll(
-								'.events-table-box--main-market thead th.col-odds .odds-name'
-							)
-						).map((col) => col.textContent?.trim() || '')
+			await page.waitForNetworkIdle()
 
-						const mainEvents = Array.from(
-							sectionEl.querySelectorAll(
-								'.events-table-box--main-market .tablesorter-hasChildRow'
-							)
-						)?.map((mainEventsRow, mainEventIndex) => {
-							const mainEventName =
-								mainEventsRow
-									.querySelector('td.col-title span.market-name')
-									?.textContent?.trim() || ''
+			await page.evaluate(() => {
+				document
+					.querySelectorAll('section.competition-box')
+					.forEach((sectionEl) => {
+						const expandButton = sectionEl.querySelector(
+							'a.name[title="Všetko"]'
+						)
 
-							return {
-								mainEventName,
-								data: {
-									id: mainEventIndex + 1,
-									name:
-										sectionEl
-											.querySelector('.market-sub-name')
-											?.textContent?.trim() || '',
-									options: Array.from(
-										mainEventsRow.querySelectorAll('td.col-odds')
-									)
-										.map((col, colIndex) => {
-											return {
-												name: mainEventsColNames[colIndex],
-												value: Number(
-													col
-														.querySelector('.odds-value')
-														?.textContent?.trim() || 0
-												),
-											}
-										})
-										.filter((data) => {
-											return data.value >= 1
-										}),
-								},
-							}
-						})
+						if (expandButton) {
+							// @ts-ignore
+							expandButton?.click()
+						}
+					})
+			})
 
-						sectionEl
-							.querySelectorAll('.market-with-header')
-							.forEach((matchMarketEl) => {
-								const nameEl = matchMarketEl.querySelector('a.names')
-								const name = nameEl?.textContent?.trim() || ''
-								const url =
-									'https://www.ifortuna.sk' +
-									nameEl?.getAttribute('href')
-								const startsAtTs =
-									matchMarketEl
-										.querySelector('span.datetime')
+			await page.waitForNetworkIdle()
+
+			let matchesData = await page.evaluate(() => {
+				const data = []
+				let matchId = 1
+
+				document
+					.querySelectorAll('section.competition-box')
+					.forEach((sectionEl) => {
+						const expandButton = sectionEl.querySelector(
+							'a.name[title="Všetko"]'
+						)
+
+						if (expandButton) {
+							const mainEventsColNames = Array.from(
+								sectionEl.querySelectorAll(
+									'.events-table-box--main-market thead th.col-odds .odds-name'
+								)
+							).map((col) => col.textContent?.trim() || '')
+
+							const mainEvents = Array.from(
+								sectionEl.querySelectorAll(
+									'.events-table-box--main-market .tablesorter-hasChildRow'
+								)
+							)?.map((mainEventsRow, mainEventIndex) => {
+								const mainEventName =
+									mainEventsRow
+										.querySelector('td.col-title span.market-name')
 										?.textContent?.trim() || ''
 
-								matchMarketEl
-									.querySelectorAll('div.market')
-									?.forEach((marketEl) => {
-										marketEl
-											.querySelector('.additional_info_icon')
-											?.remove()
+								return {
+									mainEventName,
+									data: {
+										id: mainEventIndex + 1,
+										name:
+											sectionEl
+												.querySelector('.market-sub-name')
+												?.textContent?.trim() || '',
+										options: Array.from(
+											mainEventsRow.querySelectorAll('td.col-odds')
+										)
+											.map((col, colIndex) => {
+												return {
+													name: mainEventsColNames[colIndex],
+													value: Number(
+														col
+															.querySelector('.odds-value')
+															?.textContent?.trim() || 0
+													),
+												}
+											})
+											.filter((data) => {
+												return data.value >= 1
+											}),
+									},
+								}
+							})
+
+							sectionEl
+								.querySelectorAll('.market-with-header')
+								.forEach((matchMarketEl) => {
+									const nameEl = matchMarketEl.querySelector('a.names')
+									const name = nameEl?.textContent?.trim() || ''
+									const url =
+										'https://www.ifortuna.sk' +
+										nameEl?.getAttribute('href')
+									const startsAtTs =
+										matchMarketEl
+											.querySelector('span.datetime')
+											?.textContent?.trim() || ''
+
+									matchMarketEl
+										.querySelectorAll('div.market')
+										?.forEach((marketEl) => {
+											marketEl
+												.querySelector('.additional_info_icon')
+												?.remove()
+										})
+
+									const bets = Array.from(
+										matchMarketEl.querySelectorAll('div.market')
+									)?.map((marketEl, betsIndex) => {
+										const marketNameEl =
+											marketEl.querySelector('h3 a')
+										//@ts-ignore
+										const name = marketNameEl?.innerText
+											? //@ts-ignore
+											  marketNameEl?.innerText?.trim() || ''
+											: marketNameEl?.textContent?.trim() || ''
+										const options = Array.from(
+											marketEl.querySelectorAll('.odds-group a')
+										)
+											?.filter((el) => {
+												const numValue = Number(
+													el
+														.querySelector('.odds-value')
+														?.textContent?.trim()
+												)
+												const value = numValue > 1 ? numValue : null
+
+												return !!value
+											})
+											.map((odd) => {
+												odd.querySelector('.event-meta')?.remove()
+
+												return {
+													name:
+														odd
+															.querySelector('.odds-name')
+															?.textContent?.trim() || '-',
+													value: Number(
+														odd
+															.querySelector('.odds-value')
+															?.textContent?.trim()
+													),
+												}
+											})
+
+										return {
+											id: betsIndex + 1 + mainEvents.length,
+											name,
+											options,
+										}
 									})
 
-								const bets = Array.from(
-									matchMarketEl.querySelectorAll('div.market')
-								)?.map((marketEl, betsIndex) => {
-									const marketNameEl = marketEl.querySelector('h3 a')
-									//@ts-ignore
-									const name = marketNameEl?.innerText
-										? //@ts-ignore
-										  marketNameEl?.innerText?.trim() || ''
-										: marketNameEl?.textContent?.trim() || ''
-									const options = Array.from(
-										marketEl.querySelectorAll('.odds-group a')
+									const mainEvent = mainEvents.find(
+										(mainEvent) => mainEvent.mainEventName === name
 									)
-										?.filter((el) => {
+
+									if (mainEvent) {
+										bets.unshift(mainEvent.data)
+									}
+
+									data.push({
+										id: matchId,
+										name,
+										url,
+										startsAtTs,
+										checkedAtTs: Date.now(),
+										bets,
+									})
+
+									matchId++
+								})
+						} else {
+							const nameEl = sectionEl.querySelector(
+								'span.title-part .competition-name'
+							)
+							const name = nameEl?.textContent?.trim() || ''
+							const url =
+								'https://www.ifortuna.sk' +
+									nameEl?.parentElement?.getAttribute('href') || ''
+							const startsAtTs =
+								sectionEl
+									.querySelector('span.event-datetime')
+									?.textContent?.trim() || ''
+
+							const bets = []
+
+							const colNames = Array.from(
+								sectionEl.querySelectorAll('th.col-odds')
+							)?.map((el) => {
+								return (
+									el
+										.querySelector('span.odds-name')
+										?.textContent?.trim() || ''
+								)
+							})
+
+							sectionEl
+								.querySelectorAll('tbody tr')
+								?.forEach((row, rowIndex) => {
+									const eventNameWrapperEl = row.querySelector(
+										'.title-container .event-name'
+									)
+
+									eventNameWrapperEl
+										?.querySelector('span.event-meta')
+										?.remove()
+
+									const betName = eventNameWrapperEl?.querySelector(
+										'span.market-name'
+									)
+										? eventNameWrapperEl
+												?.querySelector('span.market-name')
+												?.textContent?.trim()
+										: eventNameWrapperEl?.textContent?.trim() || ''
+
+									const options = Array.from(
+										row.querySelectorAll('td.col-odds')
+									)
+										.filter((el) => {
 											const numValue = Number(
 												el
 													.querySelector('.odds-value')
@@ -241,156 +334,60 @@ export const scrapeFortuna = async () => {
 
 											return !!value
 										})
-										.map((odd) => {
-											odd.querySelector('.event-meta')?.remove()
+										.map((el, colIndex) => {
+											const numValue = Number(
+												el
+													.querySelector('.odds-value')
+													?.textContent?.trim()
+											)
+											const value = numValue > 1 ? numValue : null
 
 											return {
-												name:
-													odd
-														.querySelector('.odds-name')
-														?.textContent?.trim() || '-',
-												value: Number(
-													odd
-														.querySelector('.odds-value')
-														?.textContent?.trim()
-												),
+												name: colNames[colIndex],
+												value,
 											}
 										})
 
-									return {
-										id: betsIndex + 1 + mainEvents.length,
-										name,
+									bets.push({
+										id: rowIndex + 1,
+										name: betName,
 										options,
-									}
-								})
-
-								const mainEvent = mainEvents.find(
-									(mainEvent) => mainEvent.mainEventName === name
-								)
-
-								if (mainEvent) {
-									bets.unshift(mainEvent.data)
-								}
-
-								data.push({
-									id: matchId,
-									name,
-									url,
-									startsAtTs,
-									checkedAtTs: Date.now(),
-									bets,
-								})
-
-								matchId++
-							})
-					} else {
-						const nameEl = sectionEl.querySelector(
-							'span.title-part .competition-name'
-						)
-						const name = nameEl?.textContent?.trim() || ''
-						const url =
-							'https://www.ifortuna.sk' +
-								nameEl?.parentElement?.getAttribute('href') || ''
-						const startsAtTs =
-							sectionEl
-								.querySelector('span.event-datetime')
-								?.textContent?.trim() || ''
-
-						const bets = []
-
-						const colNames = Array.from(
-							sectionEl.querySelectorAll('th.col-odds')
-						)?.map((el) => {
-							return (
-								el
-									.querySelector('span.odds-name')
-									?.textContent?.trim() || ''
-							)
-						})
-
-						sectionEl
-							.querySelectorAll('tbody tr')
-							?.forEach((row, rowIndex) => {
-								const eventNameWrapperEl = row.querySelector(
-									'.title-container .event-name'
-								)
-
-								eventNameWrapperEl
-									?.querySelector('span.event-meta')
-									?.remove()
-
-								const betName = eventNameWrapperEl?.querySelector(
-									'span.market-name'
-								)
-									? eventNameWrapperEl
-											?.querySelector('span.market-name')
-											?.textContent?.trim()
-									: eventNameWrapperEl?.textContent?.trim() || ''
-
-								const options = Array.from(
-									row.querySelectorAll('td.col-odds')
-								)
-									.filter((el) => {
-										const numValue = Number(
-											el
-												.querySelector('.odds-value')
-												?.textContent?.trim()
-										)
-										const value = numValue > 1 ? numValue : null
-
-										return !!value
 									})
-									.map((el, colIndex) => {
-										const numValue = Number(
-											el
-												.querySelector('.odds-value')
-												?.textContent?.trim()
-										)
-										const value = numValue > 1 ? numValue : null
-
-										return {
-											name: colNames[colIndex],
-											value,
-										}
-									})
-
-								bets.push({
-									id: rowIndex + 1,
-									name: betName,
-									options,
 								})
+
+							data.push({
+								id: matchId,
+								name,
+								url,
+								startsAtTs,
+								checkedAtTs: Date.now(),
+								bets,
 							})
 
-						data.push({
-							id: matchId,
-							name,
-							url,
-							startsAtTs,
-							checkedAtTs: Date.now(),
-							bets,
-						})
+							matchId++
+						}
+					})
 
-						matchId++
-					}
-				})
+				return data
+			})
 
-			return data
-		})
+			matchesData = matchesData.map((match) => {
+				return {
+					...match,
+					startsAtTs: getTsFromRawDate(match.startsAtTs),
+				}
+			})
 
-		matchesData = matchesData.map((match) => {
-			return {
-				...match,
-				startsAtTs: getTsFromRawDate(match.startsAtTs),
-			}
-		})
+			foundMatchesCounts[sportName] = matchesData.length
 
-		foundMatchesCounts[sportName] = matchesData.length
-
-		await fs.writeFile(
-			`${BASE_DATA_FILE_PATH}/${sportName}.json`,
-			JSON.stringify(matchesData, null, 3),
-			() => {}
-		)
+			await fs.writeFile(
+				`${BASE_DATA_FILE_PATH}/${sportName}.json`,
+				JSON.stringify(matchesData, null, 3),
+				() => {}
+			)
+		}
+	} catch (err) {
+		log(`...fortuna scraper error - ${err}`, false, 'error')
 	}
 
 	await browser.close()

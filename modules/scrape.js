@@ -15,9 +15,9 @@ export const scrape = async () => {
 	const now = performance.now()
 
 	log(
-		`scraping ${
-			process.env.ENABLED_SCRAPERS
-		} for ${process.env.TRACKED_SPORTS?.split(',').join(', ')}...`
+		`scraping ${process.env.ENABLED_SCRAPERS?.split(',').join(
+			', '
+		)} for ${process.env.TRACKED_SPORTS?.split(',').join(', ')}...`
 	)
 
 	const enabledScrapers = process.env.ENABLED_SCRAPERS?.split(',')

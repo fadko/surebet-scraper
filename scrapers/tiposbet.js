@@ -261,17 +261,20 @@ const scrapeSport = async (menuDataItem, page) => {
 
 export const scrapeTiposbet = async () => {
 	const start = performance.now()
-
-	const browser = await initBrowser()
-	const page = await browser.newPage()
-	await onInit(page)
-	const menuData = await getMenuElementsData(page)
-
 	const foundMatchesCounts = {}
+	const browser = await initBrowser()
 
-	for (const menuDataItem of menuData) {
-		const count = await scrapeSport(menuDataItem, page)
-		foundMatchesCounts[menuDataItem.name] = count
+	try {
+		const page = await browser.newPage()
+		await onInit(page)
+		const menuData = await getMenuElementsData(page)
+
+		for (const menuDataItem of menuData) {
+			const count = await scrapeSport(menuDataItem, page)
+			foundMatchesCounts[menuDataItem.name] = count
+		}
+	} catch (err) {
+		log(`...tiposbet scraper error - ${err}`, false, 'error')
 	}
 
 	await browser.close()
