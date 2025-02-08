@@ -1,6 +1,7 @@
 import fs from 'fs'
 import { log } from '../helpers/logger.js'
-// import { removeTeamsCommonWords } from '../helpers/removeTeamsCommonWords.js'
+import { isTeamSport } from '../helpers/isTeamSport.js'
+import { removeTeamsCommonWords } from '../helpers/removeTeamsCommonWords.js'
 
 const BASE_DATA_FOLDER_PATH = process.cwd() + '/data'
 
@@ -15,6 +16,10 @@ const loadData = () => {
 
 		enabledScrapers?.map((scraperName) => {
 			const filePath = `${BASE_DATA_FOLDER_PATH}/${scraperName}/${sportName}-normalized.json`
+
+			if (!fs.existsSync(filePath)) {
+				return
+			}
 
 			try {
 				const rawData = fs.readFileSync(filePath, 'utf-8')
@@ -38,17 +43,16 @@ const loadData = () => {
 	return result
 }
 
-const isSameTeam = (name1, name2) => {
+const isSameTeam = (name1, name2, teamSport) => {
 	if (name1 === name2) {
 		return true
 	}
 
 	if (!name1 === !name2) {
-		// TODO nefunguje lebo odstrani pri hladani rovnakych zapasov napriklad priezviska
-		// const [filteredTeam1Name, filteredTeam2Name] = removeTeamsCommonWords(
-		// 	name1,
-		// 	name2
-		// )
+		if (teamSport) {
+			;[name1, name2] = removeTeamsCommonWords(name1, name2)
+		}
+
 		const name1Splitted = name1.split(' ')
 		const name2Splitted = name2.split(' ')
 		const longestWordsCount = Math.max(
@@ -72,7 +76,7 @@ const isSameTeam = (name1, name2) => {
 	return false
 }
 
-const haveTeamsSimilarNames = (match1, match2) => {
+const haveTeamsSimilarNames = (match1, match2, teamSport) => {
 	const match1Teams = match1.teamNames
 	const match2Teams = match2.teamNames
 
@@ -84,20 +88,23 @@ const haveTeamsSimilarNames = (match1, match2) => {
 		return { result: false, oppositeTeams: false }
 	}
 
-	if (match1Teams.length === 1 && isSameTeam(match1Teams[0], match2Teams[0])) {
-		return { result: true, oppositeTeams: false }
-	}
-
 	if (
-		isSameTeam(match1Teams[0], match2Teams[0]) &&
-		isSameTeam(match1Teams[1], match2Teams[1])
+		match1Teams.length === 1 &&
+		isSameTeam(match1Teams[0], match2Teams[0], teamSport)
 	) {
 		return { result: true, oppositeTeams: false }
 	}
 
 	if (
-		isSameTeam(match1Teams[0], match2Teams[1]) &&
-		isSameTeam(match1Teams[1], match2Teams[0])
+		isSameTeam(match1Teams[0], match2Teams[0], teamSport) &&
+		isSameTeam(match1Teams[1], match2Teams[1], teamSport)
+	) {
+		return { result: true, oppositeTeams: false }
+	}
+
+	if (
+		isSameTeam(match1Teams[0], match2Teams[1], teamSport) &&
+		isSameTeam(match1Teams[1], match2Teams[0], teamSport)
 	) {
 		return { result: true, oppositeTeams: true }
 	}
@@ -129,6 +136,10 @@ const findMatches = (data) => {
 
 		const largestScraperMatches = data[sport][largestArrayScraperName]
 
+		if (!largestScraperMatches?.length) {
+			return
+		}
+
 		largestScraperMatches.forEach((matchToFind) => {
 			const foundMatchScrapers = []
 
@@ -138,11 +149,13 @@ const findMatches = (data) => {
 				}
 
 				const currentScraperMatches = data[sport][scraperName]
+				const teamSport = isTeamSport(sport)
 
 				currentScraperMatches.forEach((match) => {
 					const haveSimilarNames = haveTeamsSimilarNames(
 						match,
-						matchToFind
+						matchToFind,
+						teamSport
 					)
 					const timeDiff = Math.abs(
 						matchToFind.startsAtTs - match.startsAtTs

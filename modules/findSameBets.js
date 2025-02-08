@@ -136,8 +136,10 @@ export const findSameBets = () => {
 			if (tempResult.length) {
 				const result = {}
 
-				tempResult.forEach((r) => {
-					result[Object.keys(r)[0]] = r[Object.keys(r)[0]]
+				tempResult.forEach((r, index) => {
+					if (!(Object.keys(r)[0] in result)) {
+						result[Object.keys(r)[0]] = r[Object.keys(r)[0]]
+					}
 				})
 
 				bets.push(result)

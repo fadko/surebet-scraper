@@ -54,21 +54,19 @@ export const findSureBets = () => {
 					2
 				),
 			}
+
+			const scraper1Profit = +Number(
+				+distributedBets[[scraperNames[0]]] * value1 - totalBet
+			).toFixed(2)
+			const scraper2Profit = +Number(
+				+distributedBets[[scraperNames[1]]] * value2 - totalBet
+			).toFixed(2)
+
 			const profit = {
-				[scraperNames[0]]: +Number(
-					+distributedBets[[scraperNames[0]]] * value1 - totalBet
-				).toFixed(2),
-				[scraperNames[1]]: +Number(
-					+distributedBets[[scraperNames[1]]] * value2 - totalBet
-				).toFixed(2),
+				[scraperNames[0]]: scraper1Profit,
+				[scraperNames[1]]: scraper2Profit,
 			}
-			const profitPercent =
-				Math.min(
-					(distributedBets[[scraperNames[0]]] * value1 - totalBet) /
-						totalBet,
-					(distributedBets[[scraperNames[1]]] * value2 - totalBet) /
-						totalBet
-				) * 100
+			const profitPercent = Math.min(scraper1Profit, scraper2Profit)
 
 			const matchData1 = getMatchData(
 				scraperNames[0],

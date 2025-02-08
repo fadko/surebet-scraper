@@ -30,63 +30,111 @@ const loadSportsData = (sports) => {
 	return result
 }
 
-const oppositeOptionsMap = [['{no}', '{yes}']]
-
-const drawSportsBasicMap = [
-	['1', 'x2'],
-	['1', '02'],
-	['{team1}', 'x2'],
-	['{team1}', '02'],
-	['2', '1x'],
-	['2', '10'],
-	['{team2}', '1x'],
-	['{team2}', '10'],
-]
-
-const noDrawSportsBasicMap = [
+const noDrawMap = [
 	['1', '2'],
 	['{team1}', '{team2}'],
 	['1', '{team2}'],
 	['2', '{team1}'],
+	['{no}', '{yes}'],
 ]
 
-const sportSpecificOptionsMap = {
-	// sports with draw
-	hokej: [...drawSportsBasicMap],
-	futbal: [...drawSportsBasicMap],
-	basketbal: [...drawSportsBasicMap],
-	hadzana: [...drawSportsBasicMap],
-	florbal: [...drawSportsBasicMap],
-	rugby: [...drawSportsBasicMap],
-	lakros: [...drawSportsBasicMap],
-	'americky futbal': [...drawSportsBasicMap],
-	// sports with no draw
-	tenis: [...noDrawSportsBasicMap, ['2', '3']],
-	box: [...noDrawSportsBasicMap],
-	squash: [...noDrawSportsBasicMap],
-	sipky: [...noDrawSportsBasicMap],
-	'stolny tenis': [...noDrawSportsBasicMap],
+const drawMap = [
+	['1', 'x2'],
+	['1', '02'],
+	['1', 'neprehra {team2}'],
+	['{team1}', 'x2'],
+	['{team1}', '02'],
+	['{team1}', 'neprehra {team2}'],
+	['2', '1x'],
+	['2', '10'],
+	['2', 'neprehra {team1}'],
+	['{team2}', '1x'],
+	['{team2}', '10'],
+	['{team2}', 'neprehra {team1}'],
+]
+
+const oppositeOptionsMap = (betOptionsCount1, betOptionsCount2) => {
+	if (betOptionsCount1 !== betOptionsCount2) {
+		return []
+	}
+
+	let foundArray = []
+	let res = []
+
+	if (betOptionsCount1 === 2) {
+		foundArray = Array.from(noDrawMap)
+	}
+
+	if (betOptionsCount1 === 3 || betOptionsCount1 === 6) {
+		foundArray = Array.from(drawMap)
+	}
+
+	res = Array.from(foundArray)
+
+	foundArray.forEach((item) => {
+		res.push(item.slice().reverse())
+	})
+
+	return res
 }
 
-const foundInOptionsMap = (name1, name2, sport, betName) => {
-	if (
-		oppositeOptionsMap.some((options) => {
-			return (
-				(options[0] === name1 && options[1] === name2) ||
-				(options[0] === name2 && options[1] === name1)
-			)
-		})
-	) {
-		return true
+const setOppositeTeamOption = (name) => {
+	const oppositeTeamOptionsMap = {
+		1: '2',
+		2: '1',
+		'{team1}': '{team2}',
+		'{team2}': '{team1}',
+		'1x': 'x2',
+		x2: '1x',
+		10: '02',
+		'02': '10',
+	}
+
+	if (oppositeTeamOptionsMap[name]) {
+		return oppositeTeamOptionsMap[name]
+	} else {
+		if (name.includes('{team1}') && name.includes('{team2}')) {
+			return name
+				.replaceAll('{team1}', '{tempTeam}')
+				.replaceAll('{team2}', '{team1}')
+				.replaceAll('{tempTeam}', '{team2}')
+		}
+
+		if (name.includes('{team1}')) {
+			return name.replaceAll('{team1}', '{team2}')
+		}
+
+		if (name.includes('{team2}')) {
+			return name.replaceAll('{team2}', '{team1}')
+		}
+	}
+
+	return name
+}
+
+const foundInOptionsMap = (
+	name1,
+	name2,
+	betOptionsCount1,
+	betOptionsCount2,
+	option1OppositeTeams,
+	option2OppositeTeams
+) => {
+	if (option1OppositeTeams) {
+		name1 = setOppositeTeamOption(name1)
+	}
+
+	if (option2OppositeTeams) {
+		name2 = setOppositeTeamOption(name2)
+	}
+
+	if (!name1 || !name2) {
+		return false
 	}
 
 	if (
-		sport in sportSpecificOptionsMap &&
-		sportSpecificOptionsMap[sport].some((options) => {
-			return (
-				(options[0] === name1 && options[1] === name2) ||
-				(options[0] === name2 && options[1] === name1)
-			)
+		oppositeOptionsMap(betOptionsCount1, betOptionsCount2).some((options) => {
+			return options[0] === name1 && options[1] === name2
 		})
 	) {
 		return true
@@ -112,27 +160,22 @@ const foundInOptionsMap = (name1, name2, sport, betName) => {
 		}
 	}
 
-	// console.log(betName)
-	// console.log(name1)
-	// console.log(name2)
-	// console.log('\n')
-
 	return false
 }
 
 const isOppositeOption = (
 	option1,
 	option2,
-	matchName1,
-	matchName2,
-	betName,
-	betNameNormalized,
-	sportName
+	betOptionsCount1,
+	betOptionsCount2,
+	option1OppositeTeams,
+	option2OppositeTeams
 ) => {
+	const hasOppositeTeams = option1OppositeTeams !== option2OppositeTeams
 	const optionName1Normalized = option1.nameNormalized
 	const optionName2Normalized = option2.nameNormalized
 
-	if (optionName1Normalized === optionName2Normalized) {
+	if (!hasOppositeTeams && optionName1Normalized === optionName2Normalized) {
 		return false
 	}
 
@@ -140,16 +183,15 @@ const isOppositeOption = (
 		foundInOptionsMap(
 			optionName1Normalized,
 			optionName2Normalized,
-			sportName,
-			betName
+			betOptionsCount1,
+			betOptionsCount2,
+			option1OppositeTeams,
+			option2OppositeTeams
 		)
 	) {
 		return true
 	}
 
-	// console.log(betName)
-	// console.log(option1.name + ' | ' + option2.name)
-	// console.log('\n')
 	return false
 }
 
@@ -165,6 +207,7 @@ export const findOppositeBetOptions = () => {
 	const sportsArr = Array.from(new Set(sameBets.map((bet) => bet.sport)))
 	const sportsData = loadSportsData(sportsArr)
 	const result = {}
+
 	let totalFoundBetOptionsCount = 0
 
 	sameBets.forEach((activeSameBetGroup) => {
@@ -176,82 +219,87 @@ export const findOppositeBetOptions = () => {
 		}
 
 		bets.forEach((bet) => {
-			// find scraper with most options
-			let largestScraperOptionsCount = 0
-			let largestOptionsScraperName = ''
+			let alreadyComparedScrapers = {}
 
-			Object.keys(bet).forEach((scraperName) => {
-				const match = sportsData[sportName][scraperName].find(
-					(m) => m.id === activeSameBetGroup[scraperName].id
+			Object.keys(bet).forEach((currentScraperName) => {
+				alreadyComparedScrapers[currentScraperName] = []
+
+				// get options for scraper with most options
+				const match = sportsData[sportName][currentScraperName].find(
+					(m) => m.id === activeSameBetGroup[currentScraperName].id
 				)
 				const matchBet = match.bets.find(
-					(b) => b.id === bet[scraperName].id
+					(b) => b.id === bet[currentScraperName].id
 				)
-				const options = matchBet.options
 
-				if (options.length > largestScraperOptionsCount) {
-					largestOptionsScraperName = scraperName
-				}
-			})
-
-			// get options for scraper with most options
-			const match = sportsData[sportName][largestOptionsScraperName].find(
-				(m) => m.id === activeSameBetGroup[largestOptionsScraperName].id
-			)
-			const matchBet = match.bets.find(
-				(b) => b.id === bet[largestOptionsScraperName].id
-			)
-
-			// compare with options from other scrapers
-			matchBet.options.forEach((optionToFind) => {
-				Object.keys(bet)
-					.filter(
-						(scraperName) => scraperName !== largestOptionsScraperName
-					)
-					.forEach((scraperName) => {
-						const currentScraperMatch = sportsData[sportName][
-							scraperName
-						].find((m) => m.id === activeSameBetGroup[scraperName].id)
-						const currentMatchBet = currentScraperMatch.bets.find(
-							(b) => b.id === bet[scraperName].id
-						)
-
-						currentMatchBet.options.forEach((o) => {
-							// TODO find profitable same bet option
-							// if (o.name === optionToFind.name) {
-							// 	console.log(o.value, optionToFind.value)
-							// }
-
+				// compare with options from other scrapers
+				matchBet.options.forEach((optionToFind) => {
+					Object.keys(bet)
+						.filter((scraperName) => scraperName !== currentScraperName)
+						.forEach((scraperName) => {
 							if (
-								isOppositeOption(
-									o,
-									optionToFind,
-									currentScraperMatch.name,
-									match.name,
-									currentMatchBet.name,
-									currentMatchBet.nameNormalized,
-									sportName
+								alreadyComparedScrapers[scraperName]?.includes(
+									currentScraperName
 								)
 							) {
-								totalFoundBetOptionsCount++
-
-								result[sportName].push({
-									[largestOptionsScraperName]: {
-										matchId:
-											activeSameBetGroup[largestOptionsScraperName]
-												.id,
-										bet: bet[largestOptionsScraperName],
-										...optionToFind,
-									},
-									[scraperName]: {
-										matchId: activeSameBetGroup[scraperName].id,
-										bet: bet[scraperName],
-										...o,
-									},
-								})
+								return
 							}
+
+							alreadyComparedScrapers[currentScraperName].push(
+								scraperName
+							)
+
+							const currentScraperMatch = sportsData[sportName][
+								scraperName
+							].find((m) => m.id === activeSameBetGroup[scraperName].id)
+							const currentMatchBet = currentScraperMatch.bets.find(
+								(b) => b.id === bet[scraperName].id
+							)
+
+							const option1OppositeTeams =
+								activeSameBetGroup[scraperName].oppositeTeams
+							const option2OppositeTeams =
+								activeSameBetGroup[currentScraperName].oppositeTeams
+
+							currentMatchBet.options.forEach((o) => {
+								// TODO find profitable same bet option
+								// if (o.name === optionToFind.name) {
+								// 	console.log(o.value, optionToFind.value)
+								// }
+
+								if (
+									isOppositeOption(
+										o,
+										optionToFind,
+										currentMatchBet.options.length,
+										matchBet.options.length,
+										option1OppositeTeams,
+										option2OppositeTeams
+									)
+								) {
+									totalFoundBetOptionsCount++
+
+									result[sportName].push({
+										[currentScraperName]: {
+											matchName:
+												activeSameBetGroup[currentScraperName].name,
+											matchId:
+												activeSameBetGroup[currentScraperName].id,
+											bet: bet[currentScraperName],
+											...optionToFind,
+										},
+										[scraperName]: {
+											matchName:
+												activeSameBetGroup[scraperName].name,
+											matchId: activeSameBetGroup[scraperName].id,
+											bet: bet[scraperName],
+											...o,
+										},
+									})
+								}
+							})
 						})
-					})
+				})
 			})
 		})
 	})
